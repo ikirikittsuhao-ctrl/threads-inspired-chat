@@ -42,17 +42,17 @@ function MessagesPage() {
             params={{ conversationId: c.id }}
             className="flex items-center gap-3 border-b border-border px-4 py-4"
           >
-            <UserAvatar profile={c.partner} linkless />
+            <UserAvatar profile={c.other} linkless />
             <div className="min-w-0 flex-1">
               <div className="flex items-baseline justify-between gap-2">
                 <p className="truncate text-sm font-semibold">
-                  {c.partner?.display_name || c.partner?.username || "不明"}
+                  {c.other?.display_name || c.other?.username || "不明"}
                 </p>
                 {c.last_message_at && (
                   <span className="text-xs text-muted-foreground">{timeAgo(c.last_message_at)}</span>
                 )}
               </div>
-              <p className="truncate text-sm text-muted-foreground">{c.last_message ?? "メッセージはまだありません"}</p>
+              <p className="truncate text-sm text-muted-foreground">{c.lastMessage ?? "メッセージはまだありません"}</p>
             </div>
           </Link>
         ))
