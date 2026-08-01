@@ -246,6 +246,18 @@ export async function searchProfiles(term: string) {
   return (data ?? []) as Profile[];
 }
 
+export async function searchPosts(term: string, viewerId: string | null) {
+  if (!term.trim()) return [];
+  const { data, error } = await supabase
+    .from("posts")
+    .select(POST_SELECT)
+    .ilike("content", `%${term.trim()}%`)
+    .order("created_at", { ascending: false })
+    .limit(30);
+  if (error) throw error;
+  return enrich((data ?? []) as unknown as PostBase[], viewerId);
+}
+
 export interface NotificationItem {
   id: string;
   type: string;
