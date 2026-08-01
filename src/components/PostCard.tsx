@@ -2,7 +2,7 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { Heart, MessageCircle, Repeat2, Send, Trash2 } from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import type { Post } from "@/lib/api";
+import type { Post, PostBase } from "@/lib/api";
 import { createPost, deletePost, toggleLike } from "@/lib/api";
 import { timeAgo } from "@/lib/time";
 import { UserAvatar } from "./UserAvatar";
@@ -11,7 +11,7 @@ import { SignedImage } from "./SignedImage";
 interface Props {
   post: Post;
   viewerId: string | null;
-  onReply?: (post: Post) => void;
+  onReply?: (post: PostBase) => void;
   compact?: boolean;
 }
 
