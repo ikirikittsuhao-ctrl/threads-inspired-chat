@@ -89,8 +89,14 @@ export function ProfileView({ profile }: { profile: Profile }) {
 
   async function pickAvatar(file: File | undefined) {
     if (!file || !userId) return;
-    if (!file.type.startsWith("image/")) return toast.error("画像ファイルを選択してください");
-    if (file.size > 5 * 1024 * 1024) return toast.error("画像は5MB以下にしてください");
+    if (!file.type.startsWith("image/")) {
+      toast.error("画像ファイルを選択してください");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("画像は5MB以下にしてください");
+      return;
+    }
     setUploading(true);
     try {
       setAvatarPath(await uploadAvatar(file, userId));
