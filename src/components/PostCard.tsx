@@ -137,14 +137,17 @@ export function PostCard({ post, viewerId, onReply, compact }: Props) {
                 <MessageCircle className="h-[18px] w-[18px]" />
                 {post.reply_count > 0 && post.reply_count}
               </button>
-              <button
-                type="button"
-                aria-label="リポスト"
-                onClick={() => repost.mutate()}
-                className="flex items-center gap-1.5 text-sm transition-colors hover:text-foreground"
-              >
-                <Repeat2 className="h-[18px] w-[18px]" />
-              </button>
+              {!isOwn && (
+                <button
+                  type="button"
+                  aria-label="リポスト"
+                  onClick={() => repost.mutate()}
+                  className="flex items-center gap-1.5 text-sm transition-colors hover:text-foreground"
+                >
+                  <Repeat2 className="h-[18px] w-[18px]" />
+                </button>
+              )}
+
               <button
                 type="button"
                 aria-label="共有"
