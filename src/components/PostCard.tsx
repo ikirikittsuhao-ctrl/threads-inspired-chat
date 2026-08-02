@@ -52,6 +52,8 @@ export function PostCard({ post, viewerId, onReply, compact }: Props) {
 
   const target = post.repost_of ?? post;
   const author = target.profiles;
+  const isOwn = viewerId != null && viewerId === target.user_id;
+
 
   return (
     <article className="border-b border-border px-4 py-4">
@@ -104,17 +106,28 @@ export function PostCard({ post, viewerId, onReply, compact }: Props) {
 
           {!compact && (
             <div className="mt-3 flex items-center gap-5 text-muted-foreground">
-              <button
-                type="button"
-                aria-label="いいね"
-                onClick={() => like.mutate()}
-                className={`flex items-center gap-1.5 text-sm transition-colors hover:text-like ${
-                  post.liked ? "text-like" : ""
-                }`}
-              >
-                <Heart className={`h-[18px] w-[18px] ${post.liked ? "fill-current" : ""}`} />
-                {post.like_count > 0 && post.like_count}
-              </button>
+              {isOwn ? (
+                <span
+                  aria-label="いいね数"
+                  className="flex items-center gap-1.5 text-sm text-muted-foreground/70"
+                >
+                  <Heart className="h-[18px] w-[18px]" />
+                  {post.like_count > 0 && post.like_count}
+                </span>
+              ) : (
+                <button
+                  type="button"
+                  aria-label="いいね"
+                  onClick={() => like.mutate()}
+                  className={`flex items-center gap-1.5 text-sm transition-colors hover:text-like ${
+                    post.liked ? "text-like" : ""
+                  }`}
+                >
+                  <Heart className={`h-[18px] w-[18px] ${post.liked ? "fill-current" : ""}`} />
+                  {post.like_count > 0 && post.like_count}
+                </button>
+              )}
+
               <button
                 type="button"
                 aria-label="返信"
@@ -124,14 +137,17 @@ export function PostCard({ post, viewerId, onReply, compact }: Props) {
                 <MessageCircle className="h-[18px] w-[18px]" />
                 {post.reply_count > 0 && post.reply_count}
               </button>
-              <button
-                type="button"
-                aria-label="リポスト"
-                onClick={() => repost.mutate()}
-                className="flex items-center gap-1.5 text-sm transition-colors hover:text-foreground"
-              >
-                <Repeat2 className="h-[18px] w-[18px]" />
-              </button>
+              {!isOwn && (
+                <button
+                  type="button"
+                  aria-label="リポスト"
+                  onClick={() => repost.mutate()}
+                  className="flex items-center gap-1.5 text-sm transition-colors hover:text-foreground"
+                >
+                  <Repeat2 className="h-[18px] w-[18px]" />
+                </button>
+              )}
+
               <button
                 type="button"
                 aria-label="共有"

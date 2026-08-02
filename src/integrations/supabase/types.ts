@@ -50,16 +50,19 @@ export type Database = {
       conversations: {
         Row: {
           created_at: string
+          created_by: string | null
           id: string
           last_message_at: string
         }
         Insert: {
           created_at?: string
+          created_by?: string | null
           id?: string
           last_message_at?: string
         }
         Update: {
           created_at?: string
+          created_by?: string | null
           id?: string
           last_message_at?: string
         }
@@ -328,6 +331,10 @@ export type Database = {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
+        Returns: boolean
+      }
+      is_conversation_creator: {
+        Args: { _conversation_id: string; _user_id: string }
         Returns: boolean
       }
       is_conversation_member: {
