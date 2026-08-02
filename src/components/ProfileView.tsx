@@ -1,13 +1,21 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
-import { MessageCircle } from "lucide-react";
+import { Camera, MessageCircle } from "lucide-react";
 import { toast } from "sonner";
-import { getFollowStats, getUserPosts, toggleFollow, updateProfile, type Profile } from "@/lib/api";
+import {
+  getFollowStats,
+  getUserPosts,
+  isUsernameTaken,
+  toggleFollow,
+  updateProfile,
+  uploadAvatar,
+  type Profile,
+} from "@/lib/api";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { PostCard } from "./PostCard";
-import { UserAvatar } from "./UserAvatar";
+import { UserAvatar, useAvatarUrl } from "./UserAvatar";
 
 const tabs = [
   { key: "posts", label: "スレッド" },
@@ -23,7 +31,13 @@ export function ProfileView({ profile }: { profile: Profile }) {
   const [tab, setTab] = useState<TabKey>("posts");
   const [editing, setEditing] = useState(false);
   const [displayName, setDisplayName] = useState(profile.display_name);
+  const [username, setUsername] = useState(profile.username);
   const [bio, setBio] = useState(profile.bio);
+  const [isPrivate, setIsPrivate] = useState(profile.is_private);
+  const [avatarPath, setAvatarPath] = useState<string | null>(profile.avatar_url);
+  const [uploading, setUploading] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
+  const previewUrl = useAvatarUrl(avatarPath);
 
   const isMe = userId === profile.id;
 
@@ -47,14 +61,46 @@ export function ProfileView({ profile }: { profile: Profile }) {
   });
 
   const save = useMutation({
-    mutationFn: () => updateProfile(profile.id, { display_name: displayName, bio }),
+    mutationFn: async () => {
+      const nextUsername = username.trim().toLowerCase();
+      if (!/^[a-z0-9_]{3,20}$/.test(nextUsername)) {
+        throw new Error("ユーザー名は英小文字・数字・_ の3〜20文字にしてください");
+      }
+      if (displayName.trim().length > 40) throw new Error("表示名は40文字以内にしてください");
+      if (bio.length > 300) throw new Error("自己紹介は300文字以内にしてください");
+      if (nextUsername !== profile.username && (await isUsernameTaken(nextUsername, profile.id))) {
+        throw new Error("そのユーザー名は使用されています");
+      }
+      await updateProfile(profile.id, {
+        username: nextUsername,
+        display_name: displayName.trim(),
+        bio,
+        is_private: isPrivate,
+        avatar_url: avatarPath,
+      });
+    },
     onSuccess: () => {
       toast.success("プロフィールを更新しました");
       setEditing(false);
-      queryClient.invalidateQueries();
+      void queryClient.invalidateQueries();
     },
     onError: (e: Error) => toast.error(e.message),
   });
+
+  async function pickAvatar(file: File | undefined) {
+    if (!file || !userId) return;
+    if (!file.type.startsWith("image/")) return toast.error("画像ファイルを選択してください");
+    if (file.size > 5 * 1024 * 1024) return toast.error("画像は5MB以下にしてください");
+    setUploading(true);
+    try {
+      setAvatarPath(await uploadAvatar(file, userId));
+      toast.success("画像をアップロードしました。保存を押してください");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "アップロードに失敗しました");
+    } finally {
+      setUploading(false);
+    }
+  }
 
   return (
     <div>
@@ -62,7 +108,10 @@ export function ProfileView({ profile }: { profile: Profile }) {
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0">
             <h1 className="truncate text-2xl font-semibold">{profile.display_name || profile.username}</h1>
-            <p className="text-sm text-muted-foreground">@{profile.username}</p>
+            <p className="text-sm text-muted-foreground">
+              @{profile.username}
+              {profile.is_private && <span className="ml-2 text-xs">🔒 非公開アカウント</span>}
+            </p>
           </div>
           <UserAvatar profile={profile} size="lg" linkless />
         </div>
@@ -121,33 +170,113 @@ export function ProfileView({ profile }: { profile: Profile }) {
           )}
         </div>
 
-        {editing && (
-          <div className="mt-4 space-y-3 rounded-2xl border border-border p-4">
-            <label className="block text-xs text-muted-foreground" htmlFor="display-name">
-              表示名
+        {editing && isMe && (
+          <div className="mt-4 space-y-4 rounded-2xl border border-border p-4">
+            <div className="flex items-center gap-4">
+              <button
+                type="button"
+                onClick={() => fileRef.current?.click()}
+                className="relative"
+                aria-label="プロフィール画像を変更"
+              >
+                {previewUrl ? (
+                  <img
+                    src={previewUrl}
+                    alt="プロフィール画像"
+                    className="h-16 w-16 rounded-full border border-border object-cover"
+                  />
+                ) : (
+                  <span className="flex h-16 w-16 items-center justify-center rounded-full border border-border bg-secondary text-xl font-semibold">
+                    {(displayName || username || "?").charAt(0).toUpperCase()}
+                  </span>
+                )}
+                <span className="absolute -bottom-1 -right-1 rounded-full border border-border bg-background p-1.5">
+                  <Camera className="h-3.5 w-3.5" />
+                </span>
+              </button>
+              <div className="text-xs text-muted-foreground">
+                {uploading ? "アップロード中…" : "タップして写真を変更（5MBまで）"}
+                {avatarPath && (
+                  <button
+                    type="button"
+                    onClick={() => setAvatarPath(null)}
+                    className="mt-1 block text-xs text-destructive"
+                  >
+                    画像を削除
+                  </button>
+                )}
+              </div>
+              <input
+                ref={fileRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => void pickAvatar(e.target.files?.[0])}
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs text-muted-foreground" htmlFor="username">
+                ユーザー名
+              </label>
+              <input
+                id="username"
+                value={username}
+                maxLength={20}
+                onChange={(e) => setUsername(e.target.value)}
+                className="mt-1 w-full rounded-xl border border-border bg-transparent px-3 py-2 text-sm outline-none"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs text-muted-foreground" htmlFor="display-name">
+                表示名
+              </label>
+              <input
+                id="display-name"
+                value={displayName}
+                maxLength={40}
+                onChange={(e) => setDisplayName(e.target.value)}
+                className="mt-1 w-full rounded-xl border border-border bg-transparent px-3 py-2 text-sm outline-none"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs text-muted-foreground" htmlFor="bio">
+                自己紹介
+              </label>
+              <textarea
+                id="bio"
+                value={bio}
+                rows={3}
+                maxLength={300}
+                onChange={(e) => setBio(e.target.value)}
+                className="mt-1 w-full resize-none rounded-xl border border-border bg-transparent px-3 py-2 text-sm outline-none"
+              />
+              <p className="mt-1 text-right text-[11px] text-muted-foreground">{bio.length}/300</p>
+            </div>
+
+            <label className="flex items-center justify-between gap-3 text-sm" htmlFor="private">
+              <span>
+                非公開アカウント
+                <span className="block text-xs text-muted-foreground">プロフィールに鍵マークを表示します</span>
+              </span>
+              <input
+                id="private"
+                type="checkbox"
+                checked={isPrivate}
+                onChange={(e) => setIsPrivate(e.target.checked)}
+                className="h-5 w-5 accent-[hsl(var(--primary))]"
+              />
             </label>
-            <input
-              id="display-name"
-              value={displayName}
-              onChange={(e) => setDisplayName(e.target.value)}
-              className="w-full rounded-xl border border-border bg-transparent px-3 py-2 text-sm outline-none"
-            />
-            <label className="block text-xs text-muted-foreground" htmlFor="bio">
-              自己紹介
-            </label>
-            <textarea
-              id="bio"
-              value={bio}
-              rows={3}
-              onChange={(e) => setBio(e.target.value)}
-              className="w-full resize-none rounded-xl border border-border bg-transparent px-3 py-2 text-sm outline-none"
-            />
+
             <button
               type="button"
+              disabled={save.isPending || uploading}
               onClick={() => save.mutate()}
-              className="w-full rounded-xl bg-primary py-2 text-sm font-semibold text-primary-foreground"
+              className="w-full rounded-xl bg-primary py-2 text-sm font-semibold text-primary-foreground disabled:opacity-50"
             >
-              保存
+              {save.isPending ? "保存中…" : "保存"}
             </button>
           </div>
         )}
