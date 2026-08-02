@@ -52,6 +52,8 @@ export function PostCard({ post, viewerId, onReply, compact }: Props) {
 
   const target = post.repost_of ?? post;
   const author = target.profiles;
+  const isOwn = viewerId != null && viewerId === target.user_id;
+
 
   return (
     <article className="border-b border-border px-4 py-4">
