@@ -6,6 +6,7 @@ export interface Profile {
   display_name: string;
   bio: string;
   avatar_url: string | null;
+  is_private: boolean;
 }
 
 export interface PostBase {
@@ -27,7 +28,7 @@ export interface Post extends PostBase {
 }
 
 const POST_SELECT =
-  "id,user_id,content,image_url,parent_id,repost_of_id,created_at,profiles!posts_profile_fk(id,username,display_name,bio,avatar_url)";
+  "id,user_id,content,image_url,parent_id,repost_of_id,created_at,profiles!posts_profile_fk(id,username,display_name,bio,avatar_url,is_private)";
 
 async function enrich(rows: PostBase[], viewerId: string | null): Promise<Post[]> {
   if (rows.length === 0) return [];
@@ -178,7 +179,7 @@ export async function toggleLike(postId: string, userId: string, liked: boolean,
 export async function getProfileByUsername(username: string) {
   const { data, error } = await supabase
     .from("profiles")
-    .select("id,username,display_name,bio,avatar_url")
+    .select("id,username,display_name,bio,avatar_url,is_private")
     .eq("username", username)
     .maybeSingle();
   if (error) throw error;
@@ -188,7 +189,7 @@ export async function getProfileByUsername(username: string) {
 export async function getProfileById(id: string) {
   const { data, error } = await supabase
     .from("profiles")
-    .select("id,username,display_name,bio,avatar_url")
+    .select("id,username,display_name,bio,avatar_url,is_private")
     .eq("id", id)
     .maybeSingle();
   if (error) throw error;
@@ -236,7 +237,7 @@ export async function toggleFollow(targetId: string, viewerId: string, isFollowi
 }
 
 export async function searchProfiles(term: string) {
-  let query = supabase.from("profiles").select("id,username,display_name,bio,avatar_url").limit(30);
+  let query = supabase.from("profiles").select("id,username,display_name,bio,avatar_url,is_private").limit(30);
   if (term.trim()) {
     const like = `%${term.trim()}%`;
     query = query.or(`username.ilike.${like},display_name.ilike.${like}`);
@@ -271,7 +272,7 @@ export async function getNotifications() {
   const { data, error } = await supabase
     .from("notifications")
     .select(
-      "id,type,post_id,read,created_at,profiles!notifications_actor_profile_fk(id,username,display_name,bio,avatar_url)",
+      "id,type,post_id,read,created_at,profiles!notifications_actor_profile_fk(id,username,display_name,bio,avatar_url,is_private)",
     )
     .order("created_at", { ascending: false })
     .limit(60);
@@ -303,7 +304,7 @@ export async function getConversations(viewerId: string) {
     supabase.from("conversations").select("id,last_message_at").in("id", ids),
     supabase
       .from("conversation_members")
-      .select("conversation_id,user_id,profiles!cm_profile_fk(id,username,display_name,bio,avatar_url)")
+      .select("conversation_id,user_id,profiles!cm_profile_fk(id,username,display_name,bio,avatar_url,is_private)")
       .in("conversation_id", ids),
     supabase
       .from("messages")
@@ -389,7 +390,7 @@ export async function sendMessage(conversationId: string, senderId: string, cont
 export async function getConversationPartner(conversationId: string, viewerId: string) {
   const { data } = await supabase
     .from("conversation_members")
-    .select("user_id,profiles!cm_profile_fk(id,username,display_name,bio,avatar_url)")
+    .select("user_id,profiles!cm_profile_fk(id,username,display_name,bio,avatar_url,is_private)")
     .eq("conversation_id", conversationId);
   const rows = (data ?? []) as unknown as { user_id: string; profiles: Profile | null }[];
   return rows.find((r) => r.user_id !== viewerId)?.profiles ?? null;
