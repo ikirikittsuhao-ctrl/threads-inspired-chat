@@ -12,4 +12,16 @@ export default defineConfig({
     // nitro/vite builds from this
     server: { entry: "server" },
   },
+  vite: {
+    server: {
+      allowedHosts: [
+        "threads-inspired-chat.onrender.com",
+      ],
+    },
+    preview: {
+      allowedHosts: [
+        "threads-inspired-chat.onrender.com",
+      ],
+    },
+  },
 });
