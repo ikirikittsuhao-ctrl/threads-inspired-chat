@@ -409,3 +409,22 @@ export async function getSignedUrl(path: string) {
   if (error) throw error;
   return data.signedUrl;
 }
+
+export async function uploadAvatar(file: File, userId: string) {
+  const ext = (file.name.split(".").pop() ?? "jpg").toLowerCase().replace(/[^a-z0-9]/g, "");
+  const path = `${userId}/avatar-${crypto.randomUUID()}.${ext || "jpg"}`;
+  const { error } = await supabase.storage.from("post-media").upload(path, file, { upsert: true });
+  if (error) throw error;
+  return path;
+}
+
+export async function isUsernameTaken(username: string, selfId: string) {
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("id")
+    .eq("username", username)
+    .neq("id", selfId)
+    .maybeSingle();
+  if (error) throw error;
+  return Boolean(data);
+}
