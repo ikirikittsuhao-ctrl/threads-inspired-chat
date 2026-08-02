@@ -1,24 +1,54 @@
+import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import type { Profile } from "@/lib/api";
+import { getSignedUrl, type Profile } from "@/lib/api";
 
 interface Props {
   profile: Pick<Profile, "username" | "display_name" | "avatar_url"> | null;
-  size?: "sm" | "md" | "lg";
+  size?: "xs" | "sm" | "md" | "lg";
   linkless?: boolean;
 }
 
 const sizes = {
+  xs: "h-7 w-7 text-[10px]",
   sm: "h-8 w-8 text-xs",
   md: "h-10 w-10 text-sm",
   lg: "h-20 w-20 text-2xl",
 };
 
+export function useAvatarUrl(avatarUrl: string | null | undefined) {
+  const [url, setUrl] = useState<string | null>(
+    avatarUrl && /^https?:\/\//.test(avatarUrl) ? avatarUrl : null,
+  );
+
+  useEffect(() => {
+    if (!avatarUrl) {
+      setUrl(null);
+      return;
+    }
+    if (/^https?:\/\//.test(avatarUrl)) {
+      setUrl(avatarUrl);
+      return;
+    }
+    let active = true;
+    getSignedUrl(avatarUrl)
+      .then((u) => active && setUrl(u))
+      .catch(() => active && setUrl(null));
+    return () => {
+      active = false;
+    };
+  }, [avatarUrl]);
+
+  return url;
+}
+
 export function UserAvatar({ profile, size = "md", linkless }: Props) {
+  const url = useAvatarUrl(profile?.avatar_url);
   const initial = (profile?.display_name || profile?.username || "?").charAt(0).toUpperCase();
-  const inner = profile?.avatar_url ? (
+
+  const inner = url ? (
     <img
-      src={profile.avatar_url}
-      alt={profile.username}
+      src={url}
+      alt={profile?.username ?? "avatar"}
       className={`${sizes[size]} shrink-0 rounded-full border border-border object-cover`}
     />
   ) : (
