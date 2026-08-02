@@ -136,7 +136,11 @@ export async function createPost(input: {
     })
     .select("id,parent_id")
     .single();
-  if (error) throw error;
+  if (error) {
+    if (error.code === "23505") throw new Error("すでにリポストしています");
+    if (error.code === "42501") throw new Error("自分の投稿はリポストできません");
+    throw error;
+  }
 
   if (input.parentId) {
     const { data: parent } = await supabase
