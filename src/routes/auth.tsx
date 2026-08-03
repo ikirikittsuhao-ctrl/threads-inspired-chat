@@ -1,8 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { lovable } from "@/integrations/lovable/index";
 import { SastyLogo } from "@/components/SastyLogo";
 
 export const Route = createFileRoute("/auth")({
@@ -25,6 +24,11 @@ function AuthPage() {
   const [username, setUsername] = useState("");
   const [loading, setLoading] = useState(false);
 
+  useEffect(() => {
+    const message = new URLSearchParams(window.location.search).get("error");
+    if (message) toast.error(message);
+  }, []);
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
@@ -40,8 +44,8 @@ function AuthPage() {
         });
         if (error) throw error;
         if (!data.session) {
-          toast.success("確認メールを送信しました。メール内のリンクを開いてください。");
-          return;
+          const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+          if (signInError) throw signInError;
         }
         navigate({ to: "/" });
       } else {
@@ -56,16 +60,8 @@ function AuthPage() {
     }
   }
 
-  async function handleGoogle() {
-    const result = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: window.location.origin,
-    });
-    if (result.error) {
-      toast.error("Googleサインインに失敗しました");
-      return;
-    }
-    if (result.redirected) return;
-    navigate({ to: "/" });
+  function handleGoogle() {
+    window.location.href = "/api/public/auth/google/start";
   }
 
   return (

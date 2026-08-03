@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AuthCallbackRouteImport } from './routes/auth-callback'
 import { Route as SearchRouteImport } from './routes/search'
 import { Route as AuthenticatedActivityRouteImport } from './routes/_authenticated/activity'
 import { Route as AuthenticatedMeRouteImport } from './routes/_authenticated/me'
@@ -20,6 +21,8 @@ import { Route as UUsernameRouteImport } from './routes/u.$username'
 import { Route as AuthenticatedMessagesIndexRouteImport } from './routes/_authenticated/messages.index'
 import { Route as AuthenticatedMessagesConversationIdRouteImport } from './routes/_authenticated/messages.$conversationId'
 import { Route as AuthenticatedMessagesNewUserIdRouteImport } from './routes/_authenticated/messages.new.$userId'
+import { Route as ApiPublicAuthGoogleCallbackRouteImport } from './routes/api/public/auth/google/callback'
+import { Route as ApiPublicAuthGoogleStartRouteImport } from './routes/api/public/auth/google/start'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -33,6 +36,11 @@ const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthCallbackRoute = AuthCallbackRouteImport.update({
+  id: '/auth-callback',
+  path: '/auth-callback',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SearchRoute = SearchRouteImport.update({
@@ -78,10 +86,23 @@ const AuthenticatedMessagesNewUserIdRoute =
     path: '/messages/new/$userId',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const ApiPublicAuthGoogleCallbackRoute =
+  ApiPublicAuthGoogleCallbackRouteImport.update({
+    id: '/api/public/auth/google/callback',
+    path: '/api/public/auth/google/callback',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicAuthGoogleStartRoute =
+  ApiPublicAuthGoogleStartRouteImport.update({
+    id: '/api/public/auth/google/start',
+    path: '/api/public/auth/google/start',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/auth-callback': typeof AuthCallbackRoute
   '/search': typeof SearchRoute
   '/activity': typeof AuthenticatedActivityRoute
   '/me': typeof AuthenticatedMeRoute
@@ -90,10 +111,13 @@ export interface FileRoutesByFullPath {
   '/messages/$conversationId': typeof AuthenticatedMessagesConversationIdRoute
   '/messages/': typeof AuthenticatedMessagesIndexRoute
   '/messages/new/$userId': typeof AuthenticatedMessagesNewUserIdRoute
+  '/api/public/auth/google/callback': typeof ApiPublicAuthGoogleCallbackRoute
+  '/api/public/auth/google/start': typeof ApiPublicAuthGoogleStartRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/auth-callback': typeof AuthCallbackRoute
   '/search': typeof SearchRoute
   '/activity': typeof AuthenticatedActivityRoute
   '/me': typeof AuthenticatedMeRoute
@@ -102,12 +126,15 @@ export interface FileRoutesByTo {
   '/messages/$conversationId': typeof AuthenticatedMessagesConversationIdRoute
   '/messages': typeof AuthenticatedMessagesIndexRoute
   '/messages/new/$userId': typeof AuthenticatedMessagesNewUserIdRoute
+  '/api/public/auth/google/callback': typeof ApiPublicAuthGoogleCallbackRoute
+  '/api/public/auth/google/start': typeof ApiPublicAuthGoogleStartRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
+  '/auth-callback': typeof AuthCallbackRoute
   '/search': typeof SearchRoute
   '/_authenticated/activity': typeof AuthenticatedActivityRoute
   '/_authenticated/me': typeof AuthenticatedMeRoute
@@ -116,12 +143,15 @@ export interface FileRoutesById {
   '/_authenticated/messages/$conversationId': typeof AuthenticatedMessagesConversationIdRoute
   '/_authenticated/messages/': typeof AuthenticatedMessagesIndexRoute
   '/_authenticated/messages/new/$userId': typeof AuthenticatedMessagesNewUserIdRoute
+  '/api/public/auth/google/callback': typeof ApiPublicAuthGoogleCallbackRoute
+  '/api/public/auth/google/start': typeof ApiPublicAuthGoogleStartRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
     | '/auth'
+    | '/auth-callback'
     | '/search'
     | '/activity'
     | '/me'
@@ -130,10 +160,13 @@ export interface FileRouteTypes {
     | '/messages/$conversationId'
     | '/messages/'
     | '/messages/new/$userId'
+    | '/api/public/auth/google/callback'
+    | '/api/public/auth/google/start'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/auth'
+    | '/auth-callback'
     | '/search'
     | '/activity'
     | '/me'
@@ -142,11 +175,14 @@ export interface FileRouteTypes {
     | '/messages/$conversationId'
     | '/messages'
     | '/messages/new/$userId'
+    | '/api/public/auth/google/callback'
+    | '/api/public/auth/google/start'
   id:
     | '__root__'
     | '/'
     | '/_authenticated'
     | '/auth'
+    | '/auth-callback'
     | '/search'
     | '/_authenticated/activity'
     | '/_authenticated/me'
@@ -155,15 +191,20 @@ export interface FileRouteTypes {
     | '/_authenticated/messages/$conversationId'
     | '/_authenticated/messages/'
     | '/_authenticated/messages/new/$userId'
+    | '/api/public/auth/google/callback'
+    | '/api/public/auth/google/start'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  AuthCallbackRoute: typeof AuthCallbackRoute
   SearchRoute: typeof SearchRoute
   PostIdRoute: typeof PostIdRoute
   UUsernameRoute: typeof UUsernameRoute
+  ApiPublicAuthGoogleCallbackRoute: typeof ApiPublicAuthGoogleCallbackRoute
+  ApiPublicAuthGoogleStartRoute: typeof ApiPublicAuthGoogleStartRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -187,6 +228,13 @@ declare module '@tanstack/react-router' {
       path: '/auth'
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth-callback': {
+      id: '/auth-callback'
+      path: '/auth-callback'
+      fullPath: '/auth-callback'
+      preLoaderRoute: typeof AuthCallbackRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/search': {
@@ -245,6 +293,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedMessagesNewUserIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/api/public/auth/google/callback': {
+      id: '/api/public/auth/google/callback'
+      path: '/api/public/auth/google/callback'
+      fullPath: '/api/public/auth/google/callback'
+      preLoaderRoute: typeof ApiPublicAuthGoogleCallbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/auth/google/start': {
+      id: '/api/public/auth/google/start'
+      path: '/api/public/auth/google/start'
+      fullPath: '/api/public/auth/google/start'
+      preLoaderRoute: typeof ApiPublicAuthGoogleStartRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -272,20 +334,13 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  AuthCallbackRoute: AuthCallbackRoute,
   SearchRoute: SearchRoute,
   PostIdRoute: PostIdRoute,
   UUsernameRoute: UUsernameRoute,
+  ApiPublicAuthGoogleCallbackRoute: ApiPublicAuthGoogleCallbackRoute,
+  ApiPublicAuthGoogleStartRoute: ApiPublicAuthGoogleStartRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
