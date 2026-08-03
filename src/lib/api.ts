@@ -334,36 +334,12 @@ export async function getConversations(viewerId: string) {
     .sort((a, b) => b.last_message_at.localeCompare(a.last_message_at));
 }
 
-export async function getOrCreateConversation(viewerId: string, otherId: string) {
-  const { data: mine } = await supabase
-    .from("conversation_members")
-    .select("conversation_id")
-    .eq("user_id", viewerId);
-  const myIds = (mine ?? []).map((m) => m.conversation_id);
-  if (myIds.length > 0) {
-    const { data: theirs } = await supabase
-      .from("conversation_members")
-      .select("conversation_id")
-      .eq("user_id", otherId)
-      .in("conversation_id", myIds);
-    const existing = (theirs ?? [])[0];
-    if (existing) return existing.conversation_id;
-  }
-
-  const { data: convo, error } = await supabase
-    .from("conversations")
-    .insert({ created_by: viewerId })
-    .select("id")
-    .single();
+export async function getOrCreateConversation(_viewerId: string, otherId: string) {
+  const { data, error } = await supabase.rpc("create_or_get_conversation", {
+    other_user_id: otherId,
+  });
   if (error) throw error;
-  const { error: memberError } = await supabase
-    .from("conversation_members")
-    .insert([
-      { conversation_id: convo.id, user_id: viewerId },
-      { conversation_id: convo.id, user_id: otherId },
-    ]);
-  if (memberError) throw memberError;
-  return convo.id;
+  return data as string;
 }
 
 export interface MessageRow {
