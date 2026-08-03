@@ -350,7 +350,11 @@ export async function getOrCreateConversation(viewerId: string, otherId: string)
     if (existing) return existing.conversation_id;
   }
 
-  const { data: convo, error } = await supabase.from("conversations").insert({}).select("id").single();
+  const { data: convo, error } = await supabase
+    .from("conversations")
+    .insert({ created_by: viewerId })
+    .select("id")
+    .single();
   if (error) throw error;
   const { error: memberError } = await supabase
     .from("conversation_members")
