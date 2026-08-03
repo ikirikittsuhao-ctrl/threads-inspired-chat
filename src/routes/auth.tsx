@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -10,7 +10,7 @@ export const Route = createFileRoute("/auth")({
       { title: "ログイン / 新規登録 — sasuty" },
       { name: "description", content: "sasutyにログインして、スレッドの投稿・返信・DMを始めましょう。" },
       { property: "og:title", content: "ログイン / 新規登録 — sasuty" },
-      { property: "og:description", content: "メールまたはGoogleでsasutyにサインイン。" },
+      { property: "og:description", content: "メールアドレスでsasutyにサインイン。" },
     ],
   }),
   component: AuthPage,
@@ -24,11 +24,6 @@ function AuthPage() {
   const [username, setUsername] = useState("");
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    const message = new URLSearchParams(window.location.search).get("error");
-    if (message) toast.error(message);
-  }, []);
-
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
@@ -38,7 +33,6 @@ function AuthPage() {
           email,
           password,
           options: {
-            emailRedirectTo: window.location.origin,
             data: { username: username.trim().toLowerCase() },
           },
         });
@@ -60,30 +54,12 @@ function AuthPage() {
     }
   }
 
-  function handleGoogle() {
-    window.location.href = "/api/public/auth/google/start";
-  }
-
   return (
     <div className="mx-auto flex min-h-screen w-full max-w-sm flex-col justify-center px-6">
       <div className="mb-8 flex flex-col items-center gap-3">
         <SastyLogo className="h-14 w-14 text-foreground" />
         <h1 className="text-2xl font-semibold tracking-tight">sasuty へようこそ</h1>
         <p className="text-sm text-muted-foreground">思ったことを、すぐスレッドに。</p>
-      </div>
-
-      <button
-        type="button"
-        onClick={handleGoogle}
-        className="w-full rounded-xl border border-border py-3 text-sm font-semibold"
-      >
-        Google で続ける
-      </button>
-
-      <div className="my-5 flex items-center gap-3 text-xs text-muted-foreground">
-        <span className="h-px flex-1 bg-border" />
-        または
-        <span className="h-px flex-1 bg-border" />
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-3">

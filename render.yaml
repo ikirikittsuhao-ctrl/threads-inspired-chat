@@ -13,7 +13,8 @@ services:
         value: "22"
       - key: NITRO_PRESET
         value: node
-      # Lovable Cloud (Supabase) の接続情報。値は Render のダッシュボードで設定してください。
+      # Supabase 接続情報。値は Render のダッシュボードで設定してください。
+      # VITE_* はビルド時に埋め込まれるため、Render の環境変数に同じ値を設定します。
       - key: VITE_SUPABASE_URL
         sync: false
       - key: VITE_SUPABASE_PUBLISHABLE_KEY
