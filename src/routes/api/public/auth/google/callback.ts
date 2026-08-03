@@ -82,7 +82,7 @@ export const Route = createFileRoute("/api/public/auth/google/callback")({
         const hashedToken = link.data?.properties?.hashed_token;
         if (link.error || !hashedToken) return fail(origin, "サインインに失敗しました");
 
-        const dest = new URL("/auth/callback", origin);
+        const dest = new URL("/auth-callback", origin);
         dest.searchParams.set("token_hash", hashedToken);
         return new Response(null, { status: 302, headers: { location: dest.toString() } });
       },

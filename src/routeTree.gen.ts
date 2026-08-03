@@ -15,11 +15,14 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as SearchRouteImport } from './routes/search'
 import { Route as AuthenticatedActivityRouteImport } from './routes/_authenticated/activity'
 import { Route as AuthenticatedMeRouteImport } from './routes/_authenticated/me'
+import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
 import { Route as PostIdRouteImport } from './routes/post.$id'
 import { Route as UUsernameRouteImport } from './routes/u.$username'
 import { Route as AuthenticatedMessagesIndexRouteImport } from './routes/_authenticated/messages.index'
 import { Route as AuthenticatedMessagesConversationIdRouteImport } from './routes/_authenticated/messages.$conversationId'
 import { Route as AuthenticatedMessagesNewUserIdRouteImport } from './routes/_authenticated/messages.new.$userId'
+import { Route as ApiPublicAuthGoogleCallbackRouteImport } from './routes/api/public/auth/google/callback'
+import { Route as ApiPublicAuthGoogleStartRouteImport } from './routes/api/public/auth/google/start'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -50,6 +53,11 @@ const AuthenticatedMeRoute = AuthenticatedMeRouteImport.update({
   path: '/me',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthCallbackRoute = AuthCallbackRouteImport.update({
+  id: '/callback',
+  path: '/callback',
+  getParentRoute: () => AuthRoute,
+} as any)
 const PostIdRoute = PostIdRouteImport.update({
   id: '/post/$id',
   path: '/post/$id',
@@ -78,44 +86,65 @@ const AuthenticatedMessagesNewUserIdRoute =
     path: '/messages/new/$userId',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const ApiPublicAuthGoogleCallbackRoute =
+  ApiPublicAuthGoogleCallbackRouteImport.update({
+    id: '/api/public/auth/google/callback',
+    path: '/api/public/auth/google/callback',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicAuthGoogleStartRoute =
+  ApiPublicAuthGoogleStartRouteImport.update({
+    id: '/api/public/auth/google/start',
+    path: '/api/public/auth/google/start',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/auth': typeof AuthRoute
+  '/auth': typeof AuthRouteWithChildren
   '/search': typeof SearchRoute
   '/activity': typeof AuthenticatedActivityRoute
   '/me': typeof AuthenticatedMeRoute
+  '/auth/callback': typeof AuthCallbackRoute
   '/post/$id': typeof PostIdRoute
   '/u/$username': typeof UUsernameRoute
   '/messages/$conversationId': typeof AuthenticatedMessagesConversationIdRoute
   '/messages/': typeof AuthenticatedMessagesIndexRoute
   '/messages/new/$userId': typeof AuthenticatedMessagesNewUserIdRoute
+  '/api/public/auth/google/callback': typeof ApiPublicAuthGoogleCallbackRoute
+  '/api/public/auth/google/start': typeof ApiPublicAuthGoogleStartRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/auth': typeof AuthRoute
+  '/auth': typeof AuthRouteWithChildren
   '/search': typeof SearchRoute
   '/activity': typeof AuthenticatedActivityRoute
   '/me': typeof AuthenticatedMeRoute
+  '/auth/callback': typeof AuthCallbackRoute
   '/post/$id': typeof PostIdRoute
   '/u/$username': typeof UUsernameRoute
   '/messages/$conversationId': typeof AuthenticatedMessagesConversationIdRoute
   '/messages': typeof AuthenticatedMessagesIndexRoute
   '/messages/new/$userId': typeof AuthenticatedMessagesNewUserIdRoute
+  '/api/public/auth/google/callback': typeof ApiPublicAuthGoogleCallbackRoute
+  '/api/public/auth/google/start': typeof ApiPublicAuthGoogleStartRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
-  '/auth': typeof AuthRoute
+  '/auth': typeof AuthRouteWithChildren
   '/search': typeof SearchRoute
   '/_authenticated/activity': typeof AuthenticatedActivityRoute
   '/_authenticated/me': typeof AuthenticatedMeRoute
+  '/auth/callback': typeof AuthCallbackRoute
   '/post/$id': typeof PostIdRoute
   '/u/$username': typeof UUsernameRoute
   '/_authenticated/messages/$conversationId': typeof AuthenticatedMessagesConversationIdRoute
   '/_authenticated/messages/': typeof AuthenticatedMessagesIndexRoute
   '/_authenticated/messages/new/$userId': typeof AuthenticatedMessagesNewUserIdRoute
+  '/api/public/auth/google/callback': typeof ApiPublicAuthGoogleCallbackRoute
+  '/api/public/auth/google/start': typeof ApiPublicAuthGoogleStartRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -125,11 +154,14 @@ export interface FileRouteTypes {
     | '/search'
     | '/activity'
     | '/me'
+    | '/auth/callback'
     | '/post/$id'
     | '/u/$username'
     | '/messages/$conversationId'
     | '/messages/'
     | '/messages/new/$userId'
+    | '/api/public/auth/google/callback'
+    | '/api/public/auth/google/start'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -137,11 +169,14 @@ export interface FileRouteTypes {
     | '/search'
     | '/activity'
     | '/me'
+    | '/auth/callback'
     | '/post/$id'
     | '/u/$username'
     | '/messages/$conversationId'
     | '/messages'
     | '/messages/new/$userId'
+    | '/api/public/auth/google/callback'
+    | '/api/public/auth/google/start'
   id:
     | '__root__'
     | '/'
@@ -150,20 +185,25 @@ export interface FileRouteTypes {
     | '/search'
     | '/_authenticated/activity'
     | '/_authenticated/me'
+    | '/auth/callback'
     | '/post/$id'
     | '/u/$username'
     | '/_authenticated/messages/$conversationId'
     | '/_authenticated/messages/'
     | '/_authenticated/messages/new/$userId'
+    | '/api/public/auth/google/callback'
+    | '/api/public/auth/google/start'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
-  AuthRoute: typeof AuthRoute
+  AuthRoute: typeof AuthRouteWithChildren
   SearchRoute: typeof SearchRoute
   PostIdRoute: typeof PostIdRoute
   UUsernameRoute: typeof UUsernameRoute
+  ApiPublicAuthGoogleCallbackRoute: typeof ApiPublicAuthGoogleCallbackRoute
+  ApiPublicAuthGoogleStartRoute: typeof ApiPublicAuthGoogleStartRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -210,6 +250,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedMeRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/auth/callback': {
+      id: '/auth/callback'
+      path: '/callback'
+      fullPath: '/auth/callback'
+      preLoaderRoute: typeof AuthCallbackRouteImport
+      parentRoute: typeof AuthRoute
+    }
     '/post/$id': {
       id: '/post/$id'
       path: '/post/$id'
@@ -245,6 +292,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedMessagesNewUserIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/api/public/auth/google/callback': {
+      id: '/api/public/auth/google/callback'
+      path: '/api/public/auth/google/callback'
+      fullPath: '/api/public/auth/google/callback'
+      preLoaderRoute: typeof ApiPublicAuthGoogleCallbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/auth/google/start': {
+      id: '/api/public/auth/google/start'
+      path: '/api/public/auth/google/start'
+      fullPath: '/api/public/auth/google/start'
+      preLoaderRoute: typeof ApiPublicAuthGoogleStartRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -268,13 +329,25 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
 const AuthenticatedRouteRouteWithChildren =
   AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
 
+interface AuthRouteChildren {
+  AuthCallbackRoute: typeof AuthCallbackRoute
+}
+
+const AuthRouteChildren: AuthRouteChildren = {
+  AuthCallbackRoute: AuthCallbackRoute,
+}
+
+const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
-  AuthRoute: AuthRoute,
+  AuthRoute: AuthRouteWithChildren,
   SearchRoute: SearchRoute,
   PostIdRoute: PostIdRoute,
   UUsernameRoute: UUsernameRoute,
+  ApiPublicAuthGoogleCallbackRoute: ApiPublicAuthGoogleCallbackRoute,
+  ApiPublicAuthGoogleStartRoute: ApiPublicAuthGoogleStartRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
