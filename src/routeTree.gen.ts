@@ -12,10 +12,10 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AuthCallbackRouteImport } from './routes/auth-callback'
 import { Route as SearchRouteImport } from './routes/search'
 import { Route as AuthenticatedActivityRouteImport } from './routes/_authenticated/activity'
 import { Route as AuthenticatedMeRouteImport } from './routes/_authenticated/me'
-import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
 import { Route as PostIdRouteImport } from './routes/post.$id'
 import { Route as UUsernameRouteImport } from './routes/u.$username'
 import { Route as AuthenticatedMessagesIndexRouteImport } from './routes/_authenticated/messages.index'
@@ -38,6 +38,11 @@ const AuthRoute = AuthRouteImport.update({
   path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthCallbackRoute = AuthCallbackRouteImport.update({
+  id: '/auth-callback',
+  path: '/auth-callback',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SearchRoute = SearchRouteImport.update({
   id: '/search',
   path: '/search',
@@ -52,11 +57,6 @@ const AuthenticatedMeRoute = AuthenticatedMeRouteImport.update({
   id: '/me',
   path: '/me',
   getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthCallbackRoute = AuthCallbackRouteImport.update({
-  id: '/callback',
-  path: '/callback',
-  getParentRoute: () => AuthRoute,
 } as any)
 const PostIdRoute = PostIdRouteImport.update({
   id: '/post/$id',
@@ -101,11 +101,11 @@ const ApiPublicAuthGoogleStartRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/auth': typeof AuthRouteWithChildren
+  '/auth': typeof AuthRoute
+  '/auth-callback': typeof AuthCallbackRoute
   '/search': typeof SearchRoute
   '/activity': typeof AuthenticatedActivityRoute
   '/me': typeof AuthenticatedMeRoute
-  '/auth/callback': typeof AuthCallbackRoute
   '/post/$id': typeof PostIdRoute
   '/u/$username': typeof UUsernameRoute
   '/messages/$conversationId': typeof AuthenticatedMessagesConversationIdRoute
@@ -116,11 +116,11 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/auth': typeof AuthRouteWithChildren
+  '/auth': typeof AuthRoute
+  '/auth-callback': typeof AuthCallbackRoute
   '/search': typeof SearchRoute
   '/activity': typeof AuthenticatedActivityRoute
   '/me': typeof AuthenticatedMeRoute
-  '/auth/callback': typeof AuthCallbackRoute
   '/post/$id': typeof PostIdRoute
   '/u/$username': typeof UUsernameRoute
   '/messages/$conversationId': typeof AuthenticatedMessagesConversationIdRoute
@@ -133,11 +133,11 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
-  '/auth': typeof AuthRouteWithChildren
+  '/auth': typeof AuthRoute
+  '/auth-callback': typeof AuthCallbackRoute
   '/search': typeof SearchRoute
   '/_authenticated/activity': typeof AuthenticatedActivityRoute
   '/_authenticated/me': typeof AuthenticatedMeRoute
-  '/auth/callback': typeof AuthCallbackRoute
   '/post/$id': typeof PostIdRoute
   '/u/$username': typeof UUsernameRoute
   '/_authenticated/messages/$conversationId': typeof AuthenticatedMessagesConversationIdRoute
@@ -151,10 +151,10 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/auth-callback'
     | '/search'
     | '/activity'
     | '/me'
-    | '/auth/callback'
     | '/post/$id'
     | '/u/$username'
     | '/messages/$conversationId'
@@ -166,10 +166,10 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/auth-callback'
     | '/search'
     | '/activity'
     | '/me'
-    | '/auth/callback'
     | '/post/$id'
     | '/u/$username'
     | '/messages/$conversationId'
@@ -182,10 +182,10 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/auth'
+    | '/auth-callback'
     | '/search'
     | '/_authenticated/activity'
     | '/_authenticated/me'
-    | '/auth/callback'
     | '/post/$id'
     | '/u/$username'
     | '/_authenticated/messages/$conversationId'
@@ -198,7 +198,8 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
-  AuthRoute: typeof AuthRouteWithChildren
+  AuthRoute: typeof AuthRoute
+  AuthCallbackRoute: typeof AuthCallbackRoute
   SearchRoute: typeof SearchRoute
   PostIdRoute: typeof PostIdRoute
   UUsernameRoute: typeof UUsernameRoute
@@ -229,6 +230,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/auth-callback': {
+      id: '/auth-callback'
+      path: '/auth-callback'
+      fullPath: '/auth-callback'
+      preLoaderRoute: typeof AuthCallbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/search': {
       id: '/search'
       path: '/search'
@@ -249,13 +257,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/me'
       preLoaderRoute: typeof AuthenticatedMeRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/auth/callback': {
-      id: '/auth/callback'
-      path: '/callback'
-      fullPath: '/auth/callback'
-      preLoaderRoute: typeof AuthCallbackRouteImport
-      parentRoute: typeof AuthRoute
     }
     '/post/$id': {
       id: '/post/$id'
@@ -329,20 +330,11 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
 const AuthenticatedRouteRouteWithChildren =
   AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
 
-interface AuthRouteChildren {
-  AuthCallbackRoute: typeof AuthCallbackRoute
-}
-
-const AuthRouteChildren: AuthRouteChildren = {
-  AuthCallbackRoute: AuthCallbackRoute,
-}
-
-const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)
-
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
-  AuthRoute: AuthRouteWithChildren,
+  AuthRoute: AuthRoute,
+  AuthCallbackRoute: AuthCallbackRoute,
   SearchRoute: SearchRoute,
   PostIdRoute: PostIdRoute,
   UUsernameRoute: UUsernameRoute,
