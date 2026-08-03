@@ -1,5 +1,6 @@
-import { useEffect } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
+import { useEffect } from "react";
 import { getOrCreateConversation } from "@/lib/api";
 import { useAuth } from "@/hooks/use-auth";
 import { AppShell } from "@/components/AppShell";
@@ -21,16 +22,40 @@ function NewConversation() {
   const { userId } = useAuth();
   const navigate = useNavigate();
 
+  const convo = useQuery({
+    queryKey: ["new-conversation", userId, otherId],
+    queryFn: () => getOrCreateConversation(userId!, otherId),
+    enabled: Boolean(userId),
+    retry: false,
+  });
+
   useEffect(() => {
-    if (!userId) return;
-    void getOrCreateConversation(userId, otherId).then((id) =>
-      navigate({ to: "/messages/$conversationId", params: { conversationId: id }, replace: true }),
-    );
-  }, [userId, otherId, navigate]);
+    if (!convo.data) return;
+    void navigate({
+      to: "/messages/$conversationId",
+      params: { conversationId: convo.data },
+      replace: true,
+    });
+  }, [convo.data, navigate]);
 
   return (
     <AppShell title="メッセージ">
-      <p className="px-4 py-12 text-center text-sm text-muted-foreground">会話を準備中…</p>
+      {convo.isError ? (
+        <div className="px-4 py-12 text-center">
+          <p className="text-sm text-muted-foreground">
+            会話を開始できませんでした。{convo.error instanceof Error ? convo.error.message : ""}
+          </p>
+          <button
+            type="button"
+            onClick={() => void convo.refetch()}
+            className="mt-4 rounded-xl border border-border px-4 py-2 text-sm font-semibold"
+          >
+            再試行
+          </button>
+        </div>
+      ) : (
+        <p className="px-4 py-12 text-center text-sm text-muted-foreground">会話を準備中…</p>
+      )}
     </AppShell>
   );
 }
