@@ -1,0 +1,28 @@
+services:
+  - type: web
+    name: sasuty
+    runtime: node
+    plan: starter
+    region: singapore
+    buildCommand: npm ci && npm run build
+    startCommand: npm start
+    healthCheckPath: /
+    autoDeploy: true
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: NITRO_PRESET
+        value: node
+      # Lovable Cloud (Supabase) の接続情報。値は Render のダッシュボードで設定してください。
+      - key: VITE_SUPABASE_URL
+        sync: false
+      - key: VITE_SUPABASE_PUBLISHABLE_KEY
+        sync: false
+      - key: VITE_SUPABASE_PROJECT_ID
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_PUBLISHABLE_KEY
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false

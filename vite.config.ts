@@ -7,6 +7,9 @@
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 
 export default defineConfig({
+  // Render.com などセルフホスト環境向け: Lovable のビルド外では Node サーバー出力にする
+  // (Lovable 内ではプラットフォーム側で Cloudflare 出力が強制されるため影響なし)
+  nitro: { preset: "node" },
   tanstackStart: {
     // Redirect TanStack Start's bundled server entry to src/server.ts (our SSR error wrapper).
     // nitro/vite builds from this
