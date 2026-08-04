@@ -20,6 +20,7 @@ import { Route as PostIdRouteImport } from './routes/post.$id'
 import { Route as UUsernameRouteImport } from './routes/u.$username'
 import { Route as AuthenticatedMessagesIndexRouteImport } from './routes/_authenticated/messages.index'
 import { Route as AuthenticatedMessagesConversationIdRouteImport } from './routes/_authenticated/messages.$conversationId'
+import { Route as AuthenticatedMessagesNewIndexRouteImport } from './routes/_authenticated/messages.new.index'
 import { Route as AuthenticatedMessagesNewUserIdRouteImport } from './routes/_authenticated/messages.new.$userId'
 import { Route as ApiPublicAuthGoogleCallbackRouteImport } from './routes/api/public/auth/google/callback'
 import { Route as ApiPublicAuthGoogleStartRouteImport } from './routes/api/public/auth/google/start'
@@ -80,6 +81,12 @@ const AuthenticatedMessagesConversationIdRoute =
     path: '/messages/$conversationId',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedMessagesNewIndexRoute =
+  AuthenticatedMessagesNewIndexRouteImport.update({
+    id: '/messages/new/',
+    path: '/messages/new/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedMessagesNewUserIdRoute =
   AuthenticatedMessagesNewUserIdRouteImport.update({
     id: '/messages/new/$userId',
@@ -111,6 +118,7 @@ export interface FileRoutesByFullPath {
   '/messages/$conversationId': typeof AuthenticatedMessagesConversationIdRoute
   '/messages/': typeof AuthenticatedMessagesIndexRoute
   '/messages/new/$userId': typeof AuthenticatedMessagesNewUserIdRoute
+  '/messages/new/': typeof AuthenticatedMessagesNewIndexRoute
   '/api/public/auth/google/callback': typeof ApiPublicAuthGoogleCallbackRoute
   '/api/public/auth/google/start': typeof ApiPublicAuthGoogleStartRoute
 }
@@ -126,6 +134,7 @@ export interface FileRoutesByTo {
   '/messages/$conversationId': typeof AuthenticatedMessagesConversationIdRoute
   '/messages': typeof AuthenticatedMessagesIndexRoute
   '/messages/new/$userId': typeof AuthenticatedMessagesNewUserIdRoute
+  '/messages/new': typeof AuthenticatedMessagesNewIndexRoute
   '/api/public/auth/google/callback': typeof ApiPublicAuthGoogleCallbackRoute
   '/api/public/auth/google/start': typeof ApiPublicAuthGoogleStartRoute
 }
@@ -143,6 +152,7 @@ export interface FileRoutesById {
   '/_authenticated/messages/$conversationId': typeof AuthenticatedMessagesConversationIdRoute
   '/_authenticated/messages/': typeof AuthenticatedMessagesIndexRoute
   '/_authenticated/messages/new/$userId': typeof AuthenticatedMessagesNewUserIdRoute
+  '/_authenticated/messages/new/': typeof AuthenticatedMessagesNewIndexRoute
   '/api/public/auth/google/callback': typeof ApiPublicAuthGoogleCallbackRoute
   '/api/public/auth/google/start': typeof ApiPublicAuthGoogleStartRoute
 }
@@ -160,6 +170,7 @@ export interface FileRouteTypes {
     | '/messages/$conversationId'
     | '/messages/'
     | '/messages/new/$userId'
+    | '/messages/new/'
     | '/api/public/auth/google/callback'
     | '/api/public/auth/google/start'
   fileRoutesByTo: FileRoutesByTo
@@ -175,6 +186,7 @@ export interface FileRouteTypes {
     | '/messages/$conversationId'
     | '/messages'
     | '/messages/new/$userId'
+    | '/messages/new'
     | '/api/public/auth/google/callback'
     | '/api/public/auth/google/start'
   id:
@@ -191,6 +203,7 @@ export interface FileRouteTypes {
     | '/_authenticated/messages/$conversationId'
     | '/_authenticated/messages/'
     | '/_authenticated/messages/new/$userId'
+    | '/_authenticated/messages/new/'
     | '/api/public/auth/google/callback'
     | '/api/public/auth/google/start'
   fileRoutesById: FileRoutesById
@@ -286,6 +299,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedMessagesConversationIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/messages/new/': {
+      id: '/_authenticated/messages/new/'
+      path: '/messages/new'
+      fullPath: '/messages/new/'
+      preLoaderRoute: typeof AuthenticatedMessagesNewIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/messages/new/$userId': {
       id: '/_authenticated/messages/new/$userId'
       path: '/messages/new/$userId'
@@ -316,6 +336,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedMessagesConversationIdRoute: typeof AuthenticatedMessagesConversationIdRoute
   AuthenticatedMessagesIndexRoute: typeof AuthenticatedMessagesIndexRoute
   AuthenticatedMessagesNewUserIdRoute: typeof AuthenticatedMessagesNewUserIdRoute
+  AuthenticatedMessagesNewIndexRoute: typeof AuthenticatedMessagesNewIndexRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -325,6 +346,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
     AuthenticatedMessagesConversationIdRoute,
   AuthenticatedMessagesIndexRoute: AuthenticatedMessagesIndexRoute,
   AuthenticatedMessagesNewUserIdRoute: AuthenticatedMessagesNewUserIdRoute,
+  AuthenticatedMessagesNewIndexRoute: AuthenticatedMessagesNewIndexRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =

@@ -5,6 +5,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { AppShell } from "@/components/AppShell";
 import { UserAvatar } from "@/components/UserAvatar";
 import { timeAgo } from "@/lib/time";
+import { PenSquare } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/messages/")({
   head: () => ({
@@ -28,11 +29,20 @@ function MessagesPage() {
 
   return (
     <AppShell title="メッセージ">
+      <div className="flex justify-end border-b border-border px-4 py-3">
+        <Link
+          to="/messages/new"
+          className="flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground"
+        >
+          <PenSquare className="h-4 w-4" />
+          新規メッセージ
+        </Link>
+      </div>
       {conversations.isLoading ? (
         <p className="px-4 py-12 text-center text-sm text-muted-foreground">読み込み中…</p>
       ) : (conversations.data ?? []).length === 0 ? (
         <p className="px-4 py-12 text-center text-sm text-muted-foreground">
-          まだ会話がありません。プロフィールからDMを送ってみましょう。
+          まだ会話がありません。「新規メッセージ」から始めましょう。
         </p>
       ) : (
         conversations.data?.map((c) => (
