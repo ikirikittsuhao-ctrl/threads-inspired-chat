@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -23,6 +23,15 @@ function AuthPage() {
   const [password, setPassword] = useState("");
   const [username, setUsername] = useState("");
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const message = new URLSearchParams(window.location.search).get("error");
+    if (message) toast.error(message);
+  }, []);
+
+  function handleGoogle() {
+    window.location.href = "/api/public/auth/google/start";
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -60,6 +69,20 @@ function AuthPage() {
         <SastyLogo className="h-14 w-14 text-foreground" />
         <h1 className="text-2xl font-semibold tracking-tight">sasuty へようこそ</h1>
         <p className="text-sm text-muted-foreground">思ったことを、すぐスレッドに。</p>
+      </div>
+
+      <button
+        type="button"
+        onClick={handleGoogle}
+        className="w-full rounded-xl border border-border py-3 text-sm font-semibold"
+      >
+        Google で続ける
+      </button>
+
+      <div className="my-5 flex items-center gap-3 text-xs text-muted-foreground">
+        <span className="h-px flex-1 bg-border" />
+        または
+        <span className="h-px flex-1 bg-border" />
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-3">
