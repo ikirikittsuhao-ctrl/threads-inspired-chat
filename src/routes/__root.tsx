@@ -78,14 +78,18 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "sasuty — 声が集まるテキストSNS" },
-      { name: "description", content: "sasutyは短いテキストと画像で気軽につながるSNSです。" },
+      { title: "sasuty" },
+      { name: "description", content: "sasutyは、短いテキストと画像で気軽につながるSNS。フォロー、返信、リポスト、DMまで。" },
       { name: "author", content: "Lovable" },
       { property: "og:title", content: "sasuty" },
-      { property: "og:description", content: "短いテキストでつながるSNS、sasuty。" },
+      { property: "og:description", content: "sasutyは、短いテキストと画像で気軽につながるSNS。フォロー、返信、リポスト、DMまで。" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:site", content: "@Lovable" },
+      { name: "twitter:title", content: "sasuty" },
+      { name: "twitter:description", content: "sasutyは、短いテキストと画像で気軽につながるSNS。フォロー、返信、リポスト、DMまで。" },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/8a274086-9f73-40c0-bb49-ba7af8f8e6a9/id-preview-10353391--d4b2bb47-985b-47f4-9f06-a34700d7a996.lovable.app-1785805239207.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/8a274086-9f73-40c0-bb49-ba7af8f8e6a9/id-preview-10353391--d4b2bb47-985b-47f4-9f06-a34700d7a996.lovable.app-1785805239207.png" },
     ],
     links: [
       {

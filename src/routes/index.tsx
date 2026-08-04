@@ -11,13 +11,13 @@ import { Mail } from "lucide-react";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "sasuty — 声が集まるテキストSNS" },
+      { title: "sasuty" },
       {
         name: "description",
         content: "sasutyは、短いテキストと画像で気軽につながるSNS。フォロー、返信、リポスト、DMまで。",
       },
-      { property: "og:title", content: "sasuty — 声が集まるテキストSNS" },
-      { property: "og:description", content: "短いテキストでつながる、sasutyのタイムライン。" },
+      { property: "og:title", content: "sasuty" },
+      { property: "og:description", content: "sasutyは、短いテキストと画像で気軽につながるSNS。フォロー、返信、リポスト、DMまで。" },
     ],
   }),
   component: HomeFeed,
