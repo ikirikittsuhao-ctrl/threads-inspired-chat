@@ -61,14 +61,16 @@ export function AppShell({ children, title, right, hideCompose }: Props) {
       <main className="animate-fade-in flex-1 pb-24">{children}</main>
 
       {!hideCompose && (
-        <button
-          type="button"
-          aria-label="新規投稿"
-          onClick={() => (userId ? setComposing(true) : navigate({ to: "/auth" }))}
-          className="tap fixed bottom-24 left-1/2 z-30 ml-[9.5rem] grid h-14 w-14 -translate-x-1/2 place-items-center rounded-full bg-brand text-brand-foreground shadow-lg shadow-brand/25 transition-shadow hover:shadow-xl hover:shadow-brand/35 sm:ml-[10.5rem]"
-        >
-          <Feather className="h-6 w-6" />
-        </button>
+        <div className="pointer-events-none fixed bottom-24 left-1/2 z-30 flex w-full max-w-xl -translate-x-1/2 justify-end px-4">
+          <button
+            type="button"
+            aria-label="新規投稿"
+            onClick={() => (userId ? setComposing(true) : navigate({ to: "/auth" }))}
+            className="tap pointer-events-auto grid h-14 w-14 place-items-center rounded-full bg-brand text-brand-foreground shadow-lg shadow-brand/25 transition-shadow hover:shadow-xl hover:shadow-brand/35"
+          >
+            <Feather className="h-6 w-6" />
+          </button>
+        </div>
       )}
 
       <nav className="fixed bottom-0 left-1/2 z-30 flex w-full max-w-xl -translate-x-1/2 border-t border-border bg-background/90 backdrop-blur-xl">
