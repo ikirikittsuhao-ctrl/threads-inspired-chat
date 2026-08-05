@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { AppShell, useViewerProfile } from "@/components/AppShell";
+import { ProfileSkeleton } from "@/components/skeletons/Skeletons";
 import { ProfileView } from "@/components/ProfileView";
 
 export const Route = createFileRoute("/_authenticated/me")({
@@ -20,7 +21,7 @@ function MePage() {
   return (
     <AppShell title="プロフィール">
       {isLoading || !profile ? (
-        <p className="px-4 py-12 text-center text-sm text-muted-foreground">読み込み中…</p>
+        <ProfileSkeleton />
       ) : (
         <ProfileView profile={profile} />
       )}

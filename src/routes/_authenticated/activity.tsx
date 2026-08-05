@@ -5,6 +5,7 @@ import { getNotifications, markNotificationsRead } from "@/lib/api";
 import { useAuth } from "@/hooks/use-auth";
 import { AppShell } from "@/components/AppShell";
 import { UserAvatar } from "@/components/UserAvatar";
+import { RowSkeleton } from "@/components/skeletons/Skeletons";
 import { timeAgo } from "@/lib/time";
 
 export const Route = createFileRoute("/_authenticated/activity")({
@@ -35,18 +36,23 @@ function ActivityPage() {
   }, [userId]);
 
   return (
-    <AppShell title="アクティビティ">
+    <AppShell title="通知">
       {notifications.isLoading ? (
-        <p className="px-4 py-12 text-center text-sm text-muted-foreground">読み込み中…</p>
+        <RowSkeleton />
       ) : (notifications.data ?? []).length === 0 ? (
-        <p className="px-4 py-12 text-center text-sm text-muted-foreground">通知はまだありません</p>
+        <p className="animate-fade-in px-4 py-16 text-center text-sm text-muted-foreground">
+          通知はまだありません
+        </p>
       ) : (
-        notifications.data?.map((n) => {
+        notifications.data?.map((n, i) => {
           const body = (
-            <div className="flex items-center gap-3 border-b border-border px-4 py-4">
+            <div
+              className="animate-rise-in flex items-center gap-3 border-b border-border px-4 py-4 transition-colors hover:bg-accent/40"
+              style={{ animationDelay: `${Math.min(i, 8) * 45}ms` }}
+            >
               <UserAvatar profile={n.profiles} linkless />
               <p className="text-sm">
-                <span className="font-semibold">{n.profiles?.display_name || n.profiles?.username}</span>
+                <span className="font-bold">{n.profiles?.display_name || n.profiles?.username}</span>
                 <span className="text-muted-foreground">{labels[n.type] ?? "からの通知"}</span>
                 <span className="ml-2 text-xs text-muted-foreground">{timeAgo(n.created_at)}</span>
               </p>

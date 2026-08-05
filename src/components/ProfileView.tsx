@@ -14,6 +14,7 @@ import {
 } from "@/lib/api";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
+import { PostSkeleton } from "@/components/skeletons/Skeletons";
 import { PostCard } from "./PostCard";
 import { UserAvatar, useAvatarUrl } from "./UserAvatar";
 
@@ -294,8 +295,8 @@ export function ProfileView({ profile }: { profile: Profile }) {
             key={t.key}
             type="button"
             onClick={() => setTab(t.key)}
-            className={`flex-1 border-b-2 pb-3 text-sm font-medium transition-colors ${
-              tab === t.key ? "border-foreground text-foreground" : "border-transparent text-muted-foreground"
+            className={`tap flex-1 border-b-2 pb-3 text-sm font-semibold transition-colors ${
+              tab === t.key ? "border-brand text-foreground" : "border-transparent text-muted-foreground hover:bg-accent/40"
             }`}
           >
             {t.label}
@@ -304,11 +305,11 @@ export function ProfileView({ profile }: { profile: Profile }) {
       </div>
 
       {posts.isLoading ? (
-        <p className="px-4 py-10 text-center text-sm text-muted-foreground">読み込み中…</p>
+        <PostSkeleton count={3} />
       ) : (posts.data ?? []).length === 0 ? (
         <p className="px-4 py-10 text-center text-sm text-muted-foreground">まだ投稿はありません</p>
       ) : (
-        posts.data?.map((p) => <PostCard key={p.id} post={p} viewerId={userId} />)
+        posts.data?.map((p, i) => <PostCard key={p.id} post={p} viewerId={userId} index={i} />)
       )}
     </div>
   );

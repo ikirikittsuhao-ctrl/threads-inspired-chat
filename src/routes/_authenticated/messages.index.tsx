@@ -6,6 +6,7 @@ import { AppShell } from "@/components/AppShell";
 import { UserAvatar } from "@/components/UserAvatar";
 import { timeAgo } from "@/lib/time";
 import { PenSquare } from "lucide-react";
+import { RowSkeleton } from "@/components/skeletons/Skeletons";
 
 export const Route = createFileRoute("/_authenticated/messages/")({
   head: () => ({
@@ -32,14 +33,14 @@ function MessagesPage() {
       <div className="flex justify-end border-b border-border px-4 py-3">
         <Link
           to="/messages/new"
-          className="flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground"
+          className="tap flex items-center gap-2 rounded-full bg-brand px-4 py-2 text-sm font-bold text-brand-foreground"
         >
           <PenSquare className="h-4 w-4" />
           新規メッセージ
         </Link>
       </div>
       {conversations.isLoading ? (
-        <p className="px-4 py-12 text-center text-sm text-muted-foreground">読み込み中…</p>
+        <RowSkeleton count={5} />
       ) : (conversations.data ?? []).length === 0 ? (
         <p className="px-4 py-12 text-center text-sm text-muted-foreground">
           まだ会話がありません。「新規メッセージ」から始めましょう。
@@ -50,7 +51,7 @@ function MessagesPage() {
             key={c.id}
             to="/messages/$conversationId"
             params={{ conversationId: c.id }}
-            className="flex items-center gap-3 border-b border-border px-4 py-4"
+            className="animate-rise-in flex items-center gap-3 border-b border-border px-4 py-4 transition-colors hover:bg-accent/40"
           >
             <UserAvatar profile={c.other} linkless />
             <div className="min-w-0 flex-1">

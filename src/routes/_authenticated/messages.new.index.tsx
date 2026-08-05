@@ -5,6 +5,7 @@ import { Search } from "lucide-react";
 import { searchProfiles } from "@/lib/api";
 import { useAuth } from "@/hooks/use-auth";
 import { AppShell } from "@/components/AppShell";
+import { RowSkeleton } from "@/components/skeletons/Skeletons";
 import { UserAvatar } from "@/components/UserAvatar";
 
 export const Route = createFileRoute("/_authenticated/messages/new/")({
@@ -51,7 +52,7 @@ function NewMessagePage() {
           ユーザー名を入力して相手を探しましょう。
         </p>
       ) : results.isLoading ? (
-        <p className="px-4 py-12 text-center text-sm text-muted-foreground">検索中…</p>
+        <RowSkeleton count={4} />
       ) : people.length === 0 ? (
         <p className="px-4 py-12 text-center text-sm text-muted-foreground">見つかりませんでした。</p>
       ) : (
