@@ -16,6 +16,20 @@ export default defineConfig({
     server: { entry: "server" },
   },
   vite: {
+    // 公開キーはクライアントに埋め込まれる前提の値。ビルド環境で VITE_* が未設定でも
+    // 空文字にならないようフォールバックを定義する。
+    define: {
+      "import.meta.env.VITE_SUPABASE_URL": JSON.stringify(
+        process.env["VITE_SUPABASE_URL"] || "https://widvwxbikpofqgojnzuy.supabase.co",
+      ),
+      "import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY": JSON.stringify(
+        process.env["VITE_SUPABASE_PUBLISHABLE_KEY"] ||
+          "sb_publishable_-NjcB_JxG6lWs3-Qv5_2dg_SEE8oO6I",
+      ),
+      "import.meta.env.VITE_SUPABASE_PROJECT_ID": JSON.stringify(
+        process.env["VITE_SUPABASE_PROJECT_ID"] || "widvwxbikpofqgojnzuy",
+      ),
+    },
     server: {
       allowedHosts: [
         "threads-inspired-chat.onrender.com",
