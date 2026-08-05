@@ -6,6 +6,7 @@ import { getConversationPartner, getMessages, sendMessage, type MessageRow } fro
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { AppShell } from "@/components/AppShell";
+import { ChatSkeleton } from "@/components/skeletons/Skeletons";
 import { UserAvatar } from "@/components/UserAvatar";
 
 export const Route = createFileRoute("/_authenticated/messages/$conversationId")({
@@ -131,6 +132,8 @@ function ChatPage() {
         )}
       </div>
 
+      {messages.isLoading && bubbles.length === 0 && <ChatSkeleton />}
+
       {/* 会話の始まり */}
       {bubbles.length === 0 && !messages.isLoading && (
         <div className="flex flex-col items-center gap-2 px-6 py-14 text-center">
@@ -145,7 +148,7 @@ function ChatPage() {
         {bubbles.map((m) => {
           const mine = m.sender_id === userId;
           return (
-            <div key={m.id}>
+            <div key={m.id} className="animate-rise-in">
               {m.separator && (
                 <p className="py-4 text-center text-[11px] font-medium text-muted-foreground">{m.separator}</p>
               )}
@@ -159,7 +162,7 @@ function ChatPage() {
                 <p
                   className={`max-w-[72%] whitespace-pre-wrap break-words px-3.5 py-2 text-[15px] leading-snug ${
                     mine
-                      ? "bg-gradient-to-br from-primary to-primary/80 text-primary-foreground"
+                      ? "bg-brand text-brand-foreground"
                       : "bg-secondary text-secondary-foreground"
                   } ${
                     mine
