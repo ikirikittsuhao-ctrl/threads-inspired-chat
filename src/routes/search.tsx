@@ -6,12 +6,14 @@ import { useAuth } from "@/hooks/use-auth";
 import { AppShell } from "@/components/AppShell";
 import { PostCard } from "@/components/PostCard";
 import { UserAvatar } from "@/components/UserAvatar";
+import { PostSkeleton, RowSkeleton } from "@/components/skeletons/Skeletons";
+import { Search as SearchIcon } from "lucide-react";
 
 export const Route = createFileRoute("/search")({
   head: () => ({
     meta: [
       { title: "検索 — sasuty" },
-      { name: "description", content: "sasutyでユーザーやスレッドを検索して、新しい声を見つけよう。" },
+      { name: "description", content: "sasutyでユーザーや投稿を検索して、新しい声を見つけよう。" },
       { property: "og:title", content: "検索 — sasuty" },
       { property: "og:description", content: "ユーザー名やキーワードでsasutyを検索。" },
     ],
@@ -36,37 +38,49 @@ function SearchPage() {
 
   return (
     <AppShell title="検索">
-      <div className="border-b border-border px-4 py-3">
-        <input
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          placeholder="ユーザーやキーワードを検索"
-          className="w-full rounded-xl bg-secondary px-4 py-2.5 text-sm outline-none placeholder:text-muted-foreground"
-        />
+      <div className="sticky top-[3.6rem] z-20 border-b border-border bg-background/75 px-4 py-2.5 backdrop-blur-xl">
+        <div className="flex items-center gap-2 rounded-full bg-secondary px-4 py-2.5 transition-colors focus-within:bg-background focus-within:ring-1 focus-within:ring-brand">
+          <SearchIcon className="h-4 w-4 text-muted-foreground" />
+          <input
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder="ユーザーやキーワードを検索"
+            className="w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+          />
+        </div>
       </div>
 
       <section>
-        {people.data?.map((p) => (
-          <Link
-            key={p.id}
-            to="/u/$username"
-            params={{ username: p.username }}
-            className="flex items-center gap-3 border-b border-border px-4 py-3"
-          >
-            <UserAvatar profile={p} linkless />
-            <div className="min-w-0">
-              <p className="truncate text-sm font-semibold">{p.display_name || p.username}</p>
-              <p className="truncate text-xs text-muted-foreground">@{p.username}</p>
-            </div>
-          </Link>
-        ))}
+        {people.isLoading ? (
+          <RowSkeleton count={4} />
+        ) : (
+          people.data?.map((p, i) => (
+            <Link
+              key={p.id}
+              to="/u/$username"
+              params={{ username: p.username }}
+              className="animate-rise-in flex items-center gap-3 border-b border-border px-4 py-3 transition-colors hover:bg-accent/40"
+              style={{ animationDelay: `${Math.min(i, 8) * 45}ms` }}
+            >
+              <UserAvatar profile={p} linkless />
+              <div className="min-w-0">
+                <p className="truncate text-sm font-bold">{p.display_name || p.username}</p>
+                <p className="truncate text-xs text-muted-foreground">@{p.username}</p>
+              </div>
+            </Link>
+          ))
+        )}
       </section>
 
-      {(posts.data ?? []).length > 0 && (
-        <section>
-          <h2 className="px-4 py-3 text-xs font-semibold text-muted-foreground">スレッド</h2>
-          {posts.data?.map((p) => <PostCard key={p.id} post={p} viewerId={userId} />)}
-        </section>
+      {posts.isLoading && q.trim() ? (
+        <PostSkeleton count={3} />
+      ) : (
+        (posts.data ?? []).length > 0 && (
+          <section>
+            <h2 className="px-4 py-3 text-xs font-bold text-muted-foreground">投稿</h2>
+            {posts.data?.map((p, i) => <PostCard key={p.id} post={p} viewerId={userId} index={i} />)}
+          </section>
+        )
       )}
     </AppShell>
   );

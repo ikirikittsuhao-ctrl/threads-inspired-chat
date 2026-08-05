@@ -6,6 +6,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { AppShell, useViewerProfile } from "@/components/AppShell";
 import { PostCard } from "@/components/PostCard";
 import { Composer } from "@/components/Composer";
+import { PostSkeleton } from "@/components/skeletons/Skeletons";
 
 export const Route = createFileRoute("/post/$id")({
   head: () => ({
@@ -29,20 +30,26 @@ function PostDetail() {
   const replies = useQuery({ queryKey: ["replies", id, userId], queryFn: () => getReplies(id, userId) });
 
   return (
-    <AppShell title="スレッド">
+    <AppShell title="ポスト" hideCompose>
       {post.isLoading ? (
-        <p className="px-4 py-12 text-center text-sm text-muted-foreground">読み込み中…</p>
+        <PostSkeleton count={3} />
       ) : !post.data ? (
-        <p className="px-4 py-12 text-center text-sm text-muted-foreground">スレッドが見つかりません</p>
+        <p className="animate-fade-in px-4 py-16 text-center text-sm text-muted-foreground">
+          投稿が見つかりません
+        </p>
       ) : (
         <>
           <PostCard post={post.data} viewerId={userId} onReply={() => setReplying(true)} />
-          {replies.data?.map((r) => <PostCard key={r.id} post={r} viewerId={userId} />)}
+          {replies.isLoading ? (
+            <PostSkeleton count={2} />
+          ) : (
+            replies.data?.map((r, i) => <PostCard key={r.id} post={r} viewerId={userId} index={i} />)
+          )}
           {userId && (
             <button
               type="button"
               onClick={() => setReplying(true)}
-              className="fixed bottom-20 left-1/2 z-20 -translate-x-1/2 rounded-full bg-primary px-6 py-2.5 text-sm font-semibold text-primary-foreground shadow-lg"
+              className="tap fixed bottom-24 left-1/2 z-20 -translate-x-1/2 rounded-full bg-brand px-7 py-3 text-sm font-bold text-brand-foreground shadow-lg shadow-brand/25"
             >
               返信する
             </button>

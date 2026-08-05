@@ -5,6 +5,7 @@ import { getFeed } from "@/lib/api";
 import { useAuth } from "@/hooks/use-auth";
 import { AppShell } from "@/components/AppShell";
 import { PostCard } from "@/components/PostCard";
+import { PostSkeleton } from "@/components/skeletons/Skeletons";
 import { Link } from "@tanstack/react-router";
 import { Mail } from "lucide-react";
 
@@ -32,52 +33,61 @@ function HomeFeed() {
     queryFn: () => getFeed(scope, userId),
   });
 
+  const tabs = [
+    { key: "for-you", label: "おすすめ" },
+    { key: "following", label: "フォロー中" },
+  ] as const;
+
   return (
     <AppShell
       right={
-        <Link to="/messages" aria-label="メッセージ" className="text-muted-foreground hover:text-foreground">
+        <Link
+          to="/messages"
+          aria-label="メッセージ"
+          className="tap grid h-9 w-9 place-items-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+        >
           <Mail className="h-5 w-5" />
         </Link>
       }
     >
-      <div className="flex border-b border-border">
-        {(
-          [
-            { key: "for-you", label: "おすすめ" },
-            { key: "following", label: "フォロー中" },
-          ] as const
-        ).map((t) => (
+      <div className="sticky top-[3.6rem] z-20 flex border-b border-border bg-background/75 backdrop-blur-xl">
+        {tabs.map((t) => (
           <button
             key={t.key}
             type="button"
             onClick={() => setScope(t.key)}
-            className={`flex-1 border-b-2 py-3 text-sm font-medium transition-colors ${
-              scope === t.key ? "border-foreground text-foreground" : "border-transparent text-muted-foreground"
+            className={`tap relative flex-1 py-3.5 text-sm font-semibold transition-colors ${
+              scope === t.key ? "text-foreground" : "text-muted-foreground hover:bg-accent/50"
             }`}
           >
             {t.label}
+            <span
+              className={`absolute bottom-0 left-1/2 h-1 -translate-x-1/2 rounded-full bg-brand transition-all duration-300 ${
+                scope === t.key ? "w-14 opacity-100" : "w-0 opacity-0"
+              }`}
+            />
           </button>
         ))}
       </div>
 
       {feed.isLoading ? (
-        <p className="px-4 py-12 text-center text-sm text-muted-foreground">読み込み中…</p>
+        <PostSkeleton />
       ) : (feed.data ?? []).length === 0 ? (
-        <div className="px-6 py-16 text-center">
+        <div className="animate-rise-in px-6 py-16 text-center">
           <p className="text-sm text-muted-foreground">
-            {scope === "following" ? "フォロー中のスレッドはまだありません" : "最初のスレッドを投稿しましょう"}
+            {scope === "following" ? "フォロー中の投稿はまだありません" : "最初の投稿をしてみましょう"}
           </p>
           {!userId && (
             <Link
               to="/auth"
-              className="mt-4 inline-block rounded-full bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground"
+              className="tap mt-4 inline-block rounded-full bg-brand px-6 py-2.5 text-sm font-bold text-brand-foreground"
             >
               sasuty をはじめる
             </Link>
           )}
         </div>
       ) : (
-        feed.data?.map((p) => <PostCard key={p.id} post={p} viewerId={userId} />)
+        feed.data?.map((p, i) => <PostCard key={p.id} post={p} viewerId={userId} index={i} />)
       )}
     </AppShell>
   );
