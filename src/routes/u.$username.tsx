@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { getProfileByUsername } from "@/lib/api";
 import { AppShell } from "@/components/AppShell";
+import { ProfileSkeleton } from "@/components/skeletons/Skeletons";
 import { ProfileView } from "@/components/ProfileView";
 
 export const Route = createFileRoute("/u/$username")({
@@ -26,7 +27,7 @@ function ProfilePage() {
   return (
     <AppShell title={`@${username}`}>
       {profile.isLoading ? (
-        <p className="px-4 py-12 text-center text-sm text-muted-foreground">読み込み中…</p>
+        <ProfileSkeleton />
       ) : !profile.data ? (
         <p className="px-4 py-12 text-center text-sm text-muted-foreground">ユーザーが見つかりません</p>
       ) : (
