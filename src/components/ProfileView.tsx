@@ -33,7 +33,7 @@ export function ProfileView({ profile }: { profile: Profile }) {
   const [editing, setEditing] = useState(false);
   const [displayName, setDisplayName] = useState(profile.display_name);
   const [username, setUsername] = useState(profile.username);
-  const [bio, setBio] = useState(profile.bio);
+  const [bio, setBio] = useState(profile.bio ?? "");
   const [isPrivate, setIsPrivate] = useState(profile.is_private);
   const [avatarPath, setAvatarPath] = useState<string | null>(profile.avatar_url);
   const [uploading, setUploading] = useState(false);
