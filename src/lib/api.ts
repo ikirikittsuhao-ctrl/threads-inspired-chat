@@ -296,6 +296,24 @@ export async function markNotificationsRead(userId: string) {
   await supabase.from("notifications").update({ read: true }).eq("user_id", userId).eq("read", false);
 }
 
+export async function getUnreadNotificationCount(userId: string) {
+  const { count } = await supabase
+    .from("notifications")
+    .select("id", { count: "exact", head: true })
+    .eq("user_id", userId)
+    .eq("read", false);
+  return count ?? 0;
+}
+
+export async function markConversationRead(conversationId: string, userId: string) {
+  await supabase
+    .from("conversation_members")
+    .update({ last_read_at: new Date().toISOString() })
+    .eq("conversation_id", conversationId)
+    .eq("user_id", userId);
+}
+
+
 export interface ConversationSummary {
   id: string;
   last_message_at: string;
