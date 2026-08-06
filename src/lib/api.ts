@@ -4,10 +4,11 @@ export interface Profile {
   id: string;
   username: string;
   display_name: string;
-  bio: string;
+  bio?: string;
   avatar_url: string | null;
   is_private: boolean;
 }
+
 
 export interface PostBase {
   id: string;
