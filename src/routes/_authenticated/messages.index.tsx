@@ -63,7 +63,18 @@ function MessagesPage() {
                   <span className="text-xs text-muted-foreground">{timeAgo(c.last_message_at)}</span>
                 )}
               </div>
-              <p className="truncate text-sm text-muted-foreground">{c.lastMessage ?? "メッセージはまだありません"}</p>
+              <div className="flex items-center justify-between gap-2">
+                <p
+                  className={`truncate text-sm ${c.unread > 0 ? "font-semibold text-foreground" : "text-muted-foreground"}`}
+                >
+                  {c.lastMessage ?? "メッセージはまだありません"}
+                </p>
+                {c.unread > 0 && (
+                  <span className="animate-pop grid h-5 min-w-5 place-items-center rounded-full bg-brand px-1.5 text-[11px] font-bold text-brand-foreground">
+                    {c.unread > 99 ? "99+" : c.unread}
+                  </span>
+                )}
+              </div>
             </div>
           </Link>
         ))

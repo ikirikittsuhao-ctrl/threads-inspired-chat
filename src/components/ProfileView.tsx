@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { Camera, MessageCircle } from "lucide-react";
@@ -13,6 +13,7 @@ import {
   type Profile,
 } from "@/lib/api";
 import { useAuth } from "@/hooks/use-auth";
+import { disablePush, enablePush, getPushStatus } from "@/lib/push";
 import { supabase } from "@/integrations/supabase/client";
 import { PostSkeleton } from "@/components/skeletons/Skeletons";
 import { PostCard } from "./PostCard";
@@ -33,12 +34,37 @@ export function ProfileView({ profile }: { profile: Profile }) {
   const [editing, setEditing] = useState(false);
   const [displayName, setDisplayName] = useState(profile.display_name);
   const [username, setUsername] = useState(profile.username);
-  const [bio, setBio] = useState(profile.bio);
+  const [bio, setBio] = useState(profile.bio ?? "");
   const [isPrivate, setIsPrivate] = useState(profile.is_private);
   const [avatarPath, setAvatarPath] = useState<string | null>(profile.avatar_url);
   const [uploading, setUploading] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const previewUrl = useAvatarUrl(avatarPath);
+  const [pushStatus, setPushStatus] = useState<"unsupported" | "denied" | "enabled" | "disabled">("disabled");
+  const [pushBusy, setPushBusy] = useState(false);
+
+  useEffect(() => {
+    void getPushStatus().then(setPushStatus);
+  }, []);
+
+  async function togglePush(next: boolean) {
+    if (!userId) return;
+    setPushBusy(true);
+    try {
+      if (next) {
+        await enablePush(userId);
+        toast.success("プッシュ通知をオンにしました");
+      } else {
+        await disablePush();
+        toast.success("プッシュ通知をオフにしました");
+      }
+      setPushStatus(await getPushStatus());
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "通知の設定に失敗しました");
+    } finally {
+      setPushBusy(false);
+    }
+  }
 
   const isMe = userId === profile.id;
 
@@ -274,6 +300,27 @@ export function ProfileView({ profile }: { profile: Profile }) {
                 checked={isPrivate}
                 onChange={(e) => setIsPrivate(e.target.checked)}
                 className="h-5 w-5 accent-[hsl(var(--primary))]"
+              />
+            </label>
+
+            <label className="flex items-center justify-between gap-3 text-sm" htmlFor="push">
+              <span>
+                プッシュ通知
+                <span className="block text-xs text-muted-foreground">
+                  {pushStatus === "unsupported"
+                    ? "この端末では利用できません（iPhoneはホーム画面に追加してから）"
+                    : pushStatus === "denied"
+                      ? "ブラウザで通知がブロックされています"
+                      : "いいね・返信・DMを端末に通知します"}
+                </span>
+              </span>
+              <input
+                id="push"
+                type="checkbox"
+                disabled={pushBusy || pushStatus === "unsupported" || pushStatus === "denied"}
+                checked={pushStatus === "enabled"}
+                onChange={(e) => void togglePush(e.target.checked)}
+                className="h-5 w-5 accent-[hsl(var(--primary))] disabled:opacity-40"
               />
             </label>
 

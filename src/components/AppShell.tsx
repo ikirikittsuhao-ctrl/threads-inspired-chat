@@ -1,8 +1,8 @@
 import { useState, type ReactNode } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { Bell, Feather, Home, Search, User } from "lucide-react";
+import { Bell, Feather, Home, Mail, Search, User } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { getProfileById } from "@/lib/api";
+import { getConversations, getProfileById, getUnreadNotificationCount } from "@/lib/api";
 import { useAuth } from "@/hooks/use-auth";
 import { SastyLogo } from "./SastyLogo";
 import { Composer } from "./Composer";
@@ -28,6 +28,19 @@ export function AppShell({ children, title, right, hideCompose }: Props) {
   const { userId } = useAuth();
   const navigate = useNavigate();
   const { data: profile } = useViewerProfile();
+  const { data: unreadNotifications = 0 } = useQuery({
+    queryKey: ["unread-notifications", userId],
+    queryFn: () => (userId ? getUnreadNotificationCount(userId) : Promise.resolve(0)),
+    enabled: Boolean(userId),
+    refetchInterval: 30000,
+  });
+  const { data: unreadDms = 0 } = useQuery({
+    queryKey: ["unread-dms", userId],
+    queryFn: async () =>
+      userId ? (await getConversations(userId)).reduce((sum, c) => sum + c.unread, 0) : 0,
+    enabled: Boolean(userId),
+    refetchInterval: 30000,
+  });
   const [composing, setComposing] = useState(false);
 
   const tabClass = "tap flex flex-1 items-center justify-center py-3.5 text-muted-foreground";
@@ -55,7 +68,20 @@ export function AppShell({ children, title, right, hideCompose }: Props) {
             </Link>
           )}
         </div>
-        <div className="flex items-center justify-end gap-2">{right}</div>
+        <div className="flex items-center justify-end gap-2">
+          {right ?? (
+            userId && (
+              <Link to="/messages" aria-label="メッセージ" className="tap relative">
+                <Mail className={`h-6 w-6 ${unreadDms > 0 ? "text-brand" : "text-muted-foreground"}`} />
+                {unreadDms > 0 && (
+                  <span className="animate-pop absolute -right-2 -top-1.5 grid h-4 min-w-4 place-items-center rounded-full bg-brand px-1 text-[10px] font-bold text-brand-foreground">
+                    {unreadDms > 99 ? "99+" : unreadDms}
+                  </span>
+                )}
+              </Link>
+            )
+          )}
+        </div>
       </header>
 
       <main className="animate-fade-in flex-1 pb-24">{children}</main>
@@ -97,7 +123,14 @@ export function AppShell({ children, title, right, hideCompose }: Props) {
           activeProps={{ className: "text-foreground [&_svg]:animate-pop [&_svg]:fill-current" }}
           aria-label="アクティビティ"
         >
-          <Bell className="h-6 w-6" />
+          <span className="relative">
+            <Bell className={`h-6 w-6 ${unreadNotifications > 0 ? "text-brand" : ""}`} />
+            {unreadNotifications > 0 && (
+              <span className="animate-pop absolute -right-2 -top-1.5 grid h-4 min-w-4 place-items-center rounded-full bg-brand px-1 text-[10px] font-bold text-brand-foreground">
+                {unreadNotifications > 99 ? "99+" : unreadNotifications}
+              </span>
+            )}
+          </span>
         </Link>
         <Link
           to="/me"

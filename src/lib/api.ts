@@ -1,13 +1,15 @@
 import { supabase } from "@/integrations/supabase/client";
+import { notifyUser } from "@/lib/push";
 
 export interface Profile {
   id: string;
   username: string;
   display_name: string;
-  bio: string;
+  bio?: string;
   avatar_url: string | null;
   is_private: boolean;
 }
+
 
 export interface PostBase {
   id: string;
@@ -28,7 +30,7 @@ export interface Post extends PostBase {
 }
 
 const POST_SELECT =
-  "id,user_id,content,image_url,parent_id,repost_of_id,created_at,profiles!posts_profile_fk(id,username,display_name,bio,avatar_url,is_private)";
+  "id,user_id,content,image_url,parent_id,repost_of_id,created_at,profiles!posts_profile_fk(id,username,display_name,avatar_url,is_private)";
 
 async function enrich(rows: PostBase[], viewerId: string | null): Promise<Post[]> {
   if (rows.length === 0) return [];
@@ -155,6 +157,13 @@ export async function createPost(input: {
         type: "reply",
         post_id: data.id,
       });
+      void notifyUser({
+        toUserId: parent.user_id,
+        kind: "activity",
+        title: "新しい返信",
+        body: input.content.slice(0, 80) || "あなたの投稿に返信がありました",
+        url: `/post/${data.id}`,
+      });
     }
   }
   return data;
@@ -177,28 +186,42 @@ export async function toggleLike(postId: string, userId: string, liked: boolean,
     await supabase
       .from("notifications")
       .insert({ user_id: authorId, actor_id: userId, type: "like", post_id: postId });
+    void notifyUser({
+      toUserId: authorId,
+      kind: "activity",
+      title: "いいねが届きました",
+      body: "あなたの投稿にいいねがつきました",
+      url: `/post/${postId}`,
+    });
   }
+}
+
+async function withBio(profile: Profile | null): Promise<Profile | null> {
+  if (!profile) return null;
+  const { data } = await supabase.rpc("get_profile_bio", { _profile_id: profile.id });
+  return { ...profile, bio: (data as string | null) ?? "" };
 }
 
 export async function getProfileByUsername(username: string) {
   const { data, error } = await supabase
     .from("profiles")
-    .select("id,username,display_name,bio,avatar_url,is_private")
+    .select("id,username,display_name,avatar_url,is_private")
     .eq("username", username)
     .maybeSingle();
   if (error) throw error;
-  return (data as Profile | null) ?? null;
+  return withBio((data as Profile | null) ?? null);
 }
 
 export async function getProfileById(id: string) {
   const { data, error } = await supabase
     .from("profiles")
-    .select("id,username,display_name,bio,avatar_url,is_private")
+    .select("id,username,display_name,avatar_url,is_private")
     .eq("id", id)
     .maybeSingle();
   if (error) throw error;
-  return (data as Profile | null) ?? null;
+  return withBio((data as Profile | null) ?? null);
 }
+
 
 export async function updateProfile(id: string, values: Partial<Profile>) {
   const { error } = await supabase.from("profiles").update(values).eq("id", id);
@@ -238,10 +261,17 @@ export async function toggleFollow(targetId: string, viewerId: string, isFollowi
   const { error } = await supabase.from("follows").insert({ follower_id: viewerId, following_id: targetId });
   if (error) throw error;
   await supabase.from("notifications").insert({ user_id: targetId, actor_id: viewerId, type: "follow" });
+  void notifyUser({
+    toUserId: targetId,
+    kind: "activity",
+    title: "新しいフォロワー",
+    body: "あなたをフォローしました",
+    url: "/activity",
+  });
 }
 
 export async function searchProfiles(term: string) {
-  let query = supabase.from("profiles").select("id,username,display_name,bio,avatar_url,is_private").limit(30);
+  let query = supabase.from("profiles").select("id,username,display_name,avatar_url,is_private").limit(30);
   if (term.trim()) {
     const like = `%${term.trim()}%`;
     query = query.or(`username.ilike.${like},display_name.ilike.${like}`);
@@ -276,7 +306,7 @@ export async function getNotifications() {
   const { data, error } = await supabase
     .from("notifications")
     .select(
-      "id,type,post_id,read,created_at,profiles!notifications_actor_profile_fk(id,username,display_name,bio,avatar_url,is_private)",
+      "id,type,post_id,read,created_at,profiles!notifications_actor_profile_fk(id,username,display_name,avatar_url,is_private)",
     )
     .order("created_at", { ascending: false })
     .limit(60);
@@ -288,31 +318,51 @@ export async function markNotificationsRead(userId: string) {
   await supabase.from("notifications").update({ read: true }).eq("user_id", userId).eq("read", false);
 }
 
+export async function getUnreadNotificationCount(userId: string) {
+  const { count } = await supabase
+    .from("notifications")
+    .select("id", { count: "exact", head: true })
+    .eq("user_id", userId)
+    .eq("read", false);
+  return count ?? 0;
+}
+
+export async function markConversationRead(conversationId: string, userId: string) {
+  await supabase
+    .from("conversation_members")
+    .update({ last_read_at: new Date().toISOString() })
+    .eq("conversation_id", conversationId)
+    .eq("user_id", userId);
+}
+
+
 export interface ConversationSummary {
   id: string;
   last_message_at: string;
   other: Profile | null;
   lastMessage: string | null;
+  unread: number;
 }
 
 export async function getConversations(viewerId: string) {
   const { data: memberships, error } = await supabase
     .from("conversation_members")
-    .select("conversation_id")
+    .select("conversation_id,last_read_at")
     .eq("user_id", viewerId);
   if (error) throw error;
   const ids = (memberships ?? []).map((m) => m.conversation_id);
   if (ids.length === 0) return [];
+  const readAt = new Map((memberships ?? []).map((m) => [m.conversation_id, m.last_read_at]));
 
   const [{ data: convos }, { data: members }, { data: msgs }] = await Promise.all([
     supabase.from("conversations").select("id,last_message_at").in("id", ids),
     supabase
       .from("conversation_members")
-      .select("conversation_id,user_id,profiles!cm_profile_fk(id,username,display_name,bio,avatar_url,is_private)")
+      .select("conversation_id,user_id,profiles!cm_profile_fk(id,username,display_name,avatar_url,is_private)")
       .in("conversation_id", ids),
     supabase
       .from("messages")
-      .select("conversation_id,content,created_at")
+      .select("conversation_id,sender_id,content,created_at")
       .in("conversation_id", ids)
       .order("created_at", { ascending: false }),
   ]);
@@ -322,7 +372,12 @@ export async function getConversations(viewerId: string) {
     user_id: string;
     profiles: Profile | null;
   }[];
-  const messageRows = (msgs ?? []) as { conversation_id: string; content: string }[];
+  const messageRows = (msgs ?? []) as {
+    conversation_id: string;
+    sender_id: string;
+    content: string;
+    created_at: string;
+  }[];
 
   return ((convos ?? []) as { id: string; last_message_at: string }[])
     .map<ConversationSummary>((c) => ({
@@ -330,8 +385,15 @@ export async function getConversations(viewerId: string) {
       last_message_at: c.last_message_at,
       other: memberRows.find((m) => m.conversation_id === c.id && m.user_id !== viewerId)?.profiles ?? null,
       lastMessage: messageRows.find((m) => m.conversation_id === c.id)?.content ?? null,
+      unread: messageRows.filter(
+        (m) =>
+          m.conversation_id === c.id &&
+          m.sender_id !== viewerId &&
+          m.created_at > (readAt.get(c.id) ?? ""),
+      ).length,
     }))
     .sort((a, b) => b.last_message_at.localeCompare(a.last_message_at));
+
 }
 
 export async function getOrCreateConversation(_viewerId: string, otherId: string) {
@@ -369,12 +431,27 @@ export async function sendMessage(conversationId: string, senderId: string, cont
     .from("conversations")
     .update({ last_message_at: new Date().toISOString() })
     .eq("id", conversationId);
+
+  const { data: members } = await supabase
+    .from("conversation_members")
+    .select("user_id")
+    .eq("conversation_id", conversationId);
+  const other = (members ?? []).find((m) => m.user_id !== senderId);
+  if (other) {
+    void notifyUser({
+      toUserId: other.user_id,
+      kind: "dm",
+      title: "新しいメッセージ",
+      body: content.slice(0, 80),
+      url: `/messages/${conversationId}`,
+    });
+  }
 }
 
 export async function getConversationPartner(conversationId: string, viewerId: string) {
   const { data } = await supabase
     .from("conversation_members")
-    .select("user_id,profiles!cm_profile_fk(id,username,display_name,bio,avatar_url,is_private)")
+    .select("user_id,profiles!cm_profile_fk(id,username,display_name,avatar_url,is_private)")
     .eq("conversation_id", conversationId);
   const rows = (data ?? []) as unknown as { user_id: string; profiles: Profile | null }[];
   return rows.find((r) => r.user_id !== viewerId)?.profiles ?? null;

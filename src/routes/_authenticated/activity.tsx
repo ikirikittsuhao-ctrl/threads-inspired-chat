@@ -32,8 +32,12 @@ function ActivityPage() {
   const notifications = useQuery({ queryKey: ["notifications", userId], queryFn: getNotifications });
 
   useEffect(() => {
-    if (userId) void markNotificationsRead(userId);
-  }, [userId]);
+    if (!userId || notifications.isLoading) return;
+    const timer = setTimeout(() => {
+      void markNotificationsRead(userId);
+    }, 1500);
+    return () => clearTimeout(timer);
+  }, [userId, notifications.isLoading]);
 
   return (
     <AppShell title="通知">
@@ -47,7 +51,9 @@ function ActivityPage() {
         notifications.data?.map((n, i) => {
           const body = (
             <div
-              className="animate-rise-in flex items-center gap-3 border-b border-border px-4 py-4 transition-colors hover:bg-accent/40"
+              className={`animate-rise-in flex items-center gap-3 border-b border-border px-4 py-4 transition-colors hover:bg-accent/40 ${
+                n.read ? "" : "border-l-2 border-l-brand bg-brand/10"
+              }`}
               style={{ animationDelay: `${Math.min(i, 8) * 45}ms` }}
             >
               <UserAvatar profile={n.profiles} linkless />
