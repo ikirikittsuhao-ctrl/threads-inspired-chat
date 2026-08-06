@@ -180,6 +180,12 @@ export async function toggleLike(postId: string, userId: string, liked: boolean,
   }
 }
 
+async function withBio(profile: Profile | null): Promise<Profile | null> {
+  if (!profile) return null;
+  const { data } = await supabase.rpc("get_profile_bio", { _profile_id: profile.id });
+  return { ...profile, bio: (data as string | null) ?? "" };
+}
+
 export async function getProfileByUsername(username: string) {
   const { data, error } = await supabase
     .from("profiles")
@@ -187,7 +193,7 @@ export async function getProfileByUsername(username: string) {
     .eq("username", username)
     .maybeSingle();
   if (error) throw error;
-  return (data as Profile | null) ?? null;
+  return withBio((data as Profile | null) ?? null);
 }
 
 export async function getProfileById(id: string) {
@@ -197,8 +203,9 @@ export async function getProfileById(id: string) {
     .eq("id", id)
     .maybeSingle();
   if (error) throw error;
-  return (data as Profile | null) ?? null;
+  return withBio((data as Profile | null) ?? null);
 }
+
 
 export async function updateProfile(id: string, values: Partial<Profile>) {
   const { error } = await supabase.from("profiles").update(values).eq("id", id);
