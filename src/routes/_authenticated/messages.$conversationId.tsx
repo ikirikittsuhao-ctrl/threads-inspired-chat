@@ -2,7 +2,9 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Heart, Image as ImageIcon, Send } from "lucide-react";
-import { getConversationPartner, getMessages, sendMessage, type MessageRow } from "@/lib/api";
+import { getConversationPartner, getMessages, sendMessage, type MessageRow,
+  markConversationRead,
+} from "@/lib/api";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { AppShell } from "@/components/AppShell";
@@ -74,6 +76,13 @@ function ChatPage() {
   });
 
   const bubbles = useMemo(() => group(messages.data ?? []), [messages.data]);
+
+  useEffect(() => {
+    if (!userId) return;
+    void markConversationRead(conversationId, userId).then(() =>
+      queryClient.invalidateQueries({ queryKey: ["conversations", userId] }),
+    );
+  }, [conversationId, userId, queryClient, messages.data?.length]);
 
   useEffect(() => {
     const channel = supabase
