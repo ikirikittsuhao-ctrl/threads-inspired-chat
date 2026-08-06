@@ -85,9 +85,10 @@ export const sendPush = createServerFn({ method: "POST" })
           );
           const res = await fetch(sub.endpoint, {
             method: payload.method,
-            headers: payload.headers,
+            headers: payload.headers as unknown as HeadersInit,
             body: payload.body as unknown as BodyInit,
           });
+
           if (res.status === 404 || res.status === 410) dead.push(sub.id);
           else if (res.ok) sent += 1;
         } catch {
