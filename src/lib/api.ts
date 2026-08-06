@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { notifyUser } from "@/lib/push";
 
 export interface Profile {
   id: string;
@@ -156,6 +157,13 @@ export async function createPost(input: {
         type: "reply",
         post_id: data.id,
       });
+      void notifyUser({
+        toUserId: parent.user_id,
+        kind: "activity",
+        title: "新しい返信",
+        body: input.content.slice(0, 80) || "あなたの投稿に返信がありました",
+        url: `/post/${data.id}`,
+      });
     }
   }
   return data;
@@ -178,6 +186,13 @@ export async function toggleLike(postId: string, userId: string, liked: boolean,
     await supabase
       .from("notifications")
       .insert({ user_id: authorId, actor_id: userId, type: "like", post_id: postId });
+    void notifyUser({
+      toUserId: authorId,
+      kind: "activity",
+      title: "いいねが届きました",
+      body: "あなたの投稿にいいねがつきました",
+      url: `/post/${postId}`,
+    });
   }
 }
 
@@ -246,6 +261,13 @@ export async function toggleFollow(targetId: string, viewerId: string, isFollowi
   const { error } = await supabase.from("follows").insert({ follower_id: viewerId, following_id: targetId });
   if (error) throw error;
   await supabase.from("notifications").insert({ user_id: targetId, actor_id: viewerId, type: "follow" });
+  void notifyUser({
+    toUserId: targetId,
+    kind: "activity",
+    title: "新しいフォロワー",
+    body: "あなたをフォローしました",
+    url: "/activity",
+  });
 }
 
 export async function searchProfiles(term: string) {
@@ -409,6 +431,21 @@ export async function sendMessage(conversationId: string, senderId: string, cont
     .from("conversations")
     .update({ last_message_at: new Date().toISOString() })
     .eq("id", conversationId);
+
+  const { data: members } = await supabase
+    .from("conversation_members")
+    .select("user_id")
+    .eq("conversation_id", conversationId);
+  const other = (members ?? []).find((m) => m.user_id !== senderId);
+  if (other) {
+    void notifyUser({
+      toUserId: other.user_id,
+      kind: "dm",
+      title: "新しいメッセージ",
+      body: content.slice(0, 80),
+      url: `/messages/${conversationId}`,
+    });
+  }
 }
 
 export async function getConversationPartner(conversationId: string, viewerId: string) {
